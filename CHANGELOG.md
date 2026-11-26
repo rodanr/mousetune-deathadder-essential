@@ -6,6 +6,18 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-26
+
+### Fixed
+
+- The macOS app icon had an undecodable 48 px entry that could show as noise
+  in Finder or the Dock at that size.
+
+### Changed
+
+- New releases update the Homebrew cask automatically, so
+  `brew upgrade --cask mousetune` sees them right away.
+
 ## [0.1.0] - 2026-11-26
 
 ### Added
@@ -21,5 +33,6 @@ All notable changes are documented here. The format follows
 - macOS universal app bundle, DMG and zip; Windows and Linux archives;
   Homebrew cask in the rodanr/tap tap.
 
-[Unreleased]: https://github.com/rodanr/mousetune-deathadder-essential/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rodanr/mousetune-deathadder-essential/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/rodanr/mousetune-deathadder-essential/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rodanr/mousetune-deathadder-essential/releases/tag/v0.1.0

@@ -2922,7 +2922,7 @@ dependencies = [
 
 [[package]]
 name = "mousetune"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "directories",
@@ -2942,7 +2942,7 @@ dependencies = [
 
 [[package]]
 name = "mousetune-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "hex-literal",
  "proptest",
@@ -2951,7 +2951,7 @@ dependencies = [
 
 [[package]]
 name = "mousetune-hid"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "hidapi",
  "mousetune-core",
@@ -6343,7 +6343,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "icns",
