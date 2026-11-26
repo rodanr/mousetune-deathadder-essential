@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=MouseTune
+GenericName=Mouse settings
+Comment=Set DPI, polling rate and lighting on the Razer DeathAdder Essential
+Exec=mousetune
+Icon=mousetune
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=mouse;dpi;razer;deathadder;polling;

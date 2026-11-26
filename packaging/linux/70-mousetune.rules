@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Lets the logged-in user configure the Razer DeathAdder Essential family
+# (0x006e, 0x0071, 0x0098) through hidraw without running as root.
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="006e|0071|0098", TAG+="uaccess"

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //! MouseTune for DeathAdder Essential.
 
+// Release builds on Windows are GUI apps: no console window.
+#![cfg_attr(all(not(debug_assertions), windows), windows_subsystem = "windows")]
+
 mod device_ops;
 mod prefs;
 mod state;
