@@ -141,6 +141,3 @@ jobs:
             --title "MouseTune ${GITHUB_REF_NAME}" \
             --notes-file notes.md \
             --generate-notes
-      - name: Source tarball checksum (for the Homebrew formula)
-        run: |
-          curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz" | sha256sum

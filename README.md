@@ -65,16 +65,16 @@ open /Applications/MouseTune.app
 ```
 
 Only do this for apps you trust and downloaded from this repository's
-releases. You don't need either step when installing with Homebrew, because
-Homebrew builds the app on your Mac.
+releases. You don't need either step when installing with Homebrew.
 
-**Homebrew** (builds from source, needs a Rust toolchain, which Homebrew installs):
+**Homebrew:**
 
 ```sh
-brew install rodanr/tap/mousetune
-cp -R "$(brew --prefix mousetune)/MouseTune.app" /Applications/   # optional
-mousetune                                                          # or launch from the terminal
+brew install --cask rodanr/tap/mousetune
 ```
+
+The cask installs the same universal app into `/Applications` and clears the
+quarantine flag, so neither first-launch step below is needed.
 
 #### Input Monitoring permission
 

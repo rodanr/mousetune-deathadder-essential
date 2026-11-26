@@ -17,4 +17,4 @@ All notable changes are documented here. The format follows
 - Original "dial" app icon (the mouse as the needle of a tuning dial), with
   one-colour masters and a dedicated small-size cut.
 - macOS universal app bundle, DMG and zip; Windows and Linux archives;
-  Homebrew formula for a personal tap.
+  Homebrew cask in the rodanr/tap tap.
