@@ -1,0 +1,17 @@
+[package]
+name = "mousetune-hid"
+description = "hidapi transport and device discovery for MouseTune"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+mousetune-core = { path = "../mousetune-core" }
+hidapi = { version = "2", features = ["macos-shared-device"] }
+tracing = "0.1"
+
+[lints]
+workspace = true
