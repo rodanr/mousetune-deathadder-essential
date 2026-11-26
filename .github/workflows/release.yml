@@ -141,3 +141,27 @@ jobs:
             --title "MouseTune ${GITHUB_REF_NAME}" \
             --notes-file notes.md \
             --generate-notes
+
+      # Homebrew: point the cask in rodanr/homebrew-tap at this release.
+      # Uses a deploy key that belongs to MouseTune alone (write access to the
+      # tap only), so it can be revoked without affecting any other app.
+      - name: Check out the Homebrew tap
+        uses: actions/checkout@v7
+        with:
+          repository: rodanr/homebrew-tap
+          ssh-key: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          path: homebrew-tap
+      - name: Update the Homebrew cask
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          sha256="$(awk '/macos-universal\.dmg$/ { print $1 }' artifacts/SHA256SUMS.txt)"
+          scripts/update-homebrew-cask.sh "${version}" "${sha256}" homebrew-tap/Casks/mousetune.rb
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Cask already up to date."
+          else
+            git commit -am "mousetune ${version}"
+            git push
+          fi
