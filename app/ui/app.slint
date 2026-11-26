@@ -35,13 +35,14 @@ export component MainWindow inherits Window {
     // Fixed size: the layout is designed for exactly this canvas (the window
     // is also made non-resizable, see ui::run).
     width: 800px;
-    height: 560px;
+    height: 592px;
 
     in property <Screen> screen: Screen.searching;
     in property <string> message;
     in property <string> model-name;
     in property <string> firmware;
     in property <string> serial;
+    in property <string> version;
     in-out property <float> dpi-x: 800;
     in-out property <float> dpi-y: 800;
     in-out property <bool> separate-xy: false;
@@ -188,16 +189,22 @@ export component MainWindow inherits Window {
             }
         }
 
+        // The columns take all spare height, so the footer always sits on
+        // the bottom edge whatever the model.
         HorizontalLayout {
             spacing: Theme.gap;
+            vertical-stretch: 1;
 
             // Sensitivity: the hero
             HudPanel {
-                width: 384px;
+                width: 368px;
                 title: "SENSITIVITY";
                 status: root.dpi-status;
                 status-is-error: root.dpi-status-is-error;
 
+                // Flexible space above and below keeps the gauge centred and
+                // lets the panel grow to the full column height.
+                Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     alignment: center;
                     DpiDial {
@@ -243,6 +250,8 @@ export component MainWindow inherits Window {
                         }
                     }
                 }
+
+                Rectangle { vertical-stretch: 1; }
 
                 if root.separate-xy: HorizontalLayout {
                     alignment: center;
@@ -304,8 +313,14 @@ export component MainWindow inherits Window {
                     }
                 }
 
+                // Stretches so both columns end on the same line.
                 HudPanel {
                     title: "LIGHTING";
+                    vertical-stretch: 1;
+
+                    VerticalLayout {
+                    alignment: start;
+                    spacing: Theme.gap;
 
                     for led in root.leds: VerticalLayout {
                         spacing: 8px;
@@ -373,14 +388,38 @@ export component MainWindow inherits Window {
                     }
                 }
 
-                Rectangle { vertical-stretch: 1; }
-
-                Text {
-                    text: "Changes are written to the mouse as you make them.";
-                    color: Theme.text-muted;
-                    font-size: Theme.font-small;
-                    horizontal-alignment: right;
+                    }
                 }
+            }
+
+        // Footer bar
+        HorizontalLayout {
+            spacing: 8px;
+            vertical-stretch: 0;
+            Rectangle {
+                width: 6px;
+                Rectangle {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 1px;
+                    background: Theme.accent;
+                }
+            }
+            Text {
+                text: "Changes are written to the mouse as you make them.";
+                color: Theme.text-muted;
+                font-size: Theme.font-small;
+                vertical-alignment: center;
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Text {
+                text: "MOUSETUNE " + root.version;
+                color: Theme.text-muted;
+                font-family: Theme.display;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: Theme.label-tracking;
+                vertical-alignment: center;
             }
         }
     }

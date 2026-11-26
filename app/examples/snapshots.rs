@@ -22,7 +22,7 @@ use slint::{ComponentHandle, LogicalSize, PhysicalSize, PlatformError};
 
 /// The window's fixed logical size (`width`/`height` in app.slint).
 const WIDTH: f32 = 800.0;
-const HEIGHT: f32 = 560.0;
+const HEIGHT: f32 = 592.0;
 /// Render at 2x like a Retina display.
 const SCALE: f32 = 2.0;
 
@@ -77,6 +77,7 @@ fn main() -> Result<()> {
     }))
     .map_err(|e| anyhow::anyhow!("{e}"))?;
     let ui = MainWindow::new()?;
+    ui.set_version(concat!("v", env!("CARGO_PKG_VERSION")).into());
 
     let uniform = DpiPair::uniform(dpi(1600)?);
     let essential = connected(

@@ -55,6 +55,7 @@ pub fn run(
         .select()?;
 
     let window = MainWindow::new()?;
+    window.set_version(concat!("v", env!("CARGO_PKG_VERSION")).into());
 
     let weak = window.as_weak();
     let sink = Box::new(move |event: Event| {
