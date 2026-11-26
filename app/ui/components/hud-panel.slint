@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// A HUD panel (two cut corners) with a tracked title, an optional status on the
+/// right and an accent bracket on the cut corner.
+export component HudPanel inherits Rectangle {
+    in property <string> title;
+    in property <string> status;
+    in property <bool> status-is-error;
+
+    // Tech silhouette: two cut corners, two tight ones.
+    background: Theme.panel;
+    border-width: 1px;
+    border-color: Theme.panel-edge;
+    border-top-left-radius: Theme.chamfer;
+    border-bottom-right-radius: Theme.chamfer;
+    border-top-right-radius: Theme.radius;
+    border-bottom-left-radius: Theme.radius;
+
+    // Accent bracket on the top-left corner.
+    Rectangle {
+        x: Theme.chamfer;
+        y: 0;
+        width: 18px;
+        height: 2px;
+        background: Theme.accent;
+    }
+    Rectangle {
+        x: 0;
+        y: Theme.chamfer;
+        width: 2px;
+        height: 18px;
+        background: Theme.accent;
+    }
+
+    VerticalLayout {
+        padding: Theme.panel-pad;
+        spacing: Theme.gap;
+
+        HorizontalLayout {
+            spacing: 8px;
+            Text {
+                text: root.title;
+                color: Theme.text-muted;
+                font-family: Theme.display;
+                font-size: Theme.font-label;
+                font-weight: 600;
+                letter-spacing: Theme.label-tracking;
+                vertical-alignment: center;
+                accessible-role: text;
+            }
+            Rectangle { horizontal-stretch: 1; }
+            if root.status != "" && !root.status-is-error: Image {
+                source: @image-url("../icons/check.svg");
+                colorize: Theme.success;
+                width: 13px;
+                height: 13px;
+                y: (parent.height - self.height) / 2;
+                accessible-role: none;
+            }
+            Text {
+                max-width: 240px;
+                text: root.status;
+                color: root.status-is-error ? Theme.danger : Theme.success;
+                font-size: Theme.font-small;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+                wrap: word-wrap;
+                accessible-role: text;
+            }
+        }
+
+        @children
+    }
+}

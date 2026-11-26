@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//! Renders every screen of the UI offscreen, in dark and light, to PNGs.
+//! Renders every screen of the UI offscreen to PNGs.
 //!
 //! ```sh
 //! cargo run -p mousetune --example snapshots --features snapshots -- docs/screenshots
@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use mousetune::state::{AppState, DeviceState, LedState};
-use mousetune::ui::{MainWindow, Theme, present};
+use mousetune::ui::{MainWindow, present};
 use mousetune_core::{Brightness, Dpi, DpiPair, Effect, Led, Model, PollingRate};
 use slint::platform::software_renderer::{
     MinimalSoftwareWindow, PremultipliedRgbaColor, RepaintBufferType,
@@ -20,13 +20,11 @@ use slint::platform::software_renderer::{
 use slint::platform::{Platform, WindowAdapter};
 use slint::{ComponentHandle, LogicalSize, PhysicalSize, PlatformError};
 
-/// Logical window width; height comes from each screen's layout.
-const WIDTH: f32 = 460.0;
+/// The window's fixed logical size (`width`/`height` in app.slint).
+const WIDTH: f32 = 800.0;
+const HEIGHT: f32 = 560.0;
 /// Render at 2x like a Retina display.
 const SCALE: f32 = 2.0;
-/// The window's default height (`preferred-height` in app.slint): render at
-/// least this tall so layout stretching shows up exactly as in the app.
-const MIN_HEIGHT: f32 = 720.0;
 
 /// Offscreen platform with a manual clock, so animations can be finished
 /// before a frame is captured.
@@ -123,20 +121,11 @@ fn main() -> Result<()> {
     ];
 
     for (name, state) in &cases {
-        for dark in [true, false] {
-            ui.set_separate_xy(false);
-            ui.global::<Theme>().set_dark(dark);
-            present(&ui, state);
-            let theme = if dark { "dark" } else { "light" };
-            render(
-                &ui,
-                &window,
-                &clock,
-                &out.join(format!("{name}-{theme}.png")),
-            )?;
-        }
+        ui.set_separate_xy(false);
+        present(&ui, state);
+        render(&ui, &window, &clock, &out.join(format!("{name}.png")))?;
     }
-    println!("wrote {} snapshots to {}", cases.len() * 2, out.display());
+    println!("wrote {} snapshots to {}", cases.len(), out.display());
     Ok(())
 }
 
@@ -147,14 +136,10 @@ fn render(
     path: &Path,
 ) -> Result<()> {
     ui.show()?;
-    // Let every transition finish, then size the window to the settled layout
-    // (twice: the first pass can still see the previous screen's height).
-    for _ in 0..2 {
-        clock.set(clock.get() + Duration::from_secs(1));
-        slint::platform::update_timers_and_animations();
-        let height = ui.get_content_height().max(MIN_HEIGHT);
-        ui.window().set_size(LogicalSize::new(WIDTH, height));
-    }
+    ui.window().set_size(LogicalSize::new(WIDTH, HEIGHT));
+    // Let every transition finish before capturing.
+    clock.set(clock.get() + Duration::from_secs(1));
+    slint::platform::update_timers_and_animations();
     let PhysicalSize { width, height } = ui.window().size();
     let (w, h) = (usize::try_from(width)?, usize::try_from(height)?);
 

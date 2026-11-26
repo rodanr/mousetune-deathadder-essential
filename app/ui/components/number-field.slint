@@ -9,6 +9,7 @@ export component NumberField inherits Rectangle {
     in property <float> maximum;
     in property <float> step: 1;
     in property <string> label;
+    in property <length> font-size: Theme.font-hero;
     callback committed(float);
 
     private property <bool> editing: input.has-focus;
@@ -45,7 +46,7 @@ export component NumberField inherits Rectangle {
         width: parent.width + 12px;
         height: parent.height + 4px;
         border-radius: 6px;
-        background: root.editing || touch.has-hover ? Theme.control : transparent;
+        background: root.editing || touch.has-hover ? Theme.control-hover : transparent;
         border-width: root.editing ? 2px : 0px;
         border-color: Theme.focus;
     }
@@ -63,8 +64,9 @@ export component NumberField inherits Rectangle {
         color: Theme.text;
         selection-background-color: Theme.accent;
         selection-foreground-color: Theme.on-accent;
-        font-size: Theme.font-value;
-        font-weight: 600;
+        font-family: Theme.display;
+        font-size: root.font-size;
+        font-weight: 700;
         input-type: number;
         single-line: true;
         accepted => {

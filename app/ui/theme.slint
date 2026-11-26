@@ -1,40 +1,45 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Design tokens. Every colour, size and radius used by the UI comes from here.
-import { Palette } from "std-widgets.slint";
+// Design tokens for MouseTune's HUD look. Every colour, size and radius used
+// by the UI comes from here. Dark only: it's a gaming tool used in dim setups.
 
 export global Theme {
-    // Follows the OS appearance; the snapshot tool overrides it.
-    in-out property <bool> dark: Palette.color-scheme != ColorScheme.light;
-
-    // Surfaces: one content layer plus a quieter layer for control tracks.
-    out property <color> surface: dark ? #14181d : #ffffff;
-    out property <color> control: dark ? #1f252d : #eef0f4;
-    out property <color> control-hover: dark ? #283039 : #e2e6ec;
-    out property <color> divider: dark ? #262c34 : #e3e6eb;
-    out property <color> outline: dark ? #343c47 : #cdd2da;
+    // Surfaces, deepest first.
+    out property <color> window: #07090d;
+    out property <color> panel: #0d1117;
+    out property <color> panel-edge: #1d2530;
+    out property <color> control: #131921;
+    out property <color> control-hover: #1a222d;
+    out property <color> control-edge: #232c38;
 
     // Text
-    out property <color> text: dark ? #eceff4 : #131820;
-    out property <color> text-muted: dark ? #9aa4b2 : #566070;
+    out property <color> text: #e8edf5;
+    out property <color> text-muted: #8a96a8;
+    // Decorative marks only (ticks), never text.
+    out property <color> mark: #2a3442;
 
-    // Accent is reserved for the current value and selection.
-    out property <color> accent: dark ? #5b9bff : #2563d9;
-    out property <color> on-accent: dark ? #08111f : #ffffff;
-    out property <color> focus: dark ? #9cc2ff : #1b4fb0;
-    out property <color> danger: dark ? #ff8a80 : #c62828;
-    out property <color> success: dark ? #4cd9a0 : #0b7a53;
+    // Electric blue: current value, selection and focus. Never Razer green.
+    out property <color> accent: #3b8cff;
+    out property <color> accent-hi: #7cc4ff;
+    out property <color> accent-glow: #3b8cff66;
+    out property <color> on-accent: #03101f;
+    out property <color> focus: #9fd0ff;
+    out property <color> danger: #ff5f7e;
+    out property <color> success: #3ee6a0;
 
-    // Geometry
-    out property <length> radius: 8px;
-    out property <length> page-pad: 24px;
-    out property <length> section-pad: 20px;
-    out property <length> gap: 12px;
-    out property <length> control-height: 34px;
+    // Geometry: small radii and chamfered panels.
+    out property <length> radius: 4px;
+    out property <length> chamfer: 14px;
+    out property <length> page-pad: 22px;
+    out property <length> panel-pad: 18px;
+    out property <length> gap: 14px;
+    out property <length> control-height: 36px;
 
-    // Type: one family (the platform UI font), tight 1.2 scale.
+    // Type: Oxanium (bundled) for the HUD voice, the platform sans for prose.
+    out property <string> display: "Oxanium";
     out property <length> font-small: 12px;
     out property <length> font-body: 14px;
-    out property <length> font-heading: 15px;
-    out property <length> font-title: 20px;
-    out property <length> font-value: 28px;
+    out property <length> font-label: 12px;
+    out property <length> font-title: 21px;
+    out property <length> font-hero: 54px;
+    out property <length> label-tracking: 1.6px;
 }

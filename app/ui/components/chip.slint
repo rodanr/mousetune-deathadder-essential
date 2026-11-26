@@ -10,19 +10,23 @@ export component Chip inherits Rectangle {
     height: 30px;
     horizontal-stretch: 1;
     border-radius: Theme.radius;
-    background: root.active ? Theme.accent : (touch.has-hover ? Theme.control-hover : Theme.control);
-    border-width: scope.has-focus ? 2px : 0px;
-    border-color: Theme.focus;
+    background: root.active
+        ? @linear-gradient(90deg, Theme.accent 0%, Theme.accent-hi 100%)
+        : (touch.has-hover ? Theme.control-hover : Theme.control);
+    border-width: scope.has-focus ? 2px : 1px;
+    border-color: scope.has-focus ? Theme.focus : (root.active ? transparent : Theme.control-edge);
+    drop-shadow-blur: root.active ? 12px : 0px;
+    drop-shadow-color: Theme.accent-glow;
     accessible-role: button;
     accessible-label: root.text + " DPI";
     accessible-action-default => { root.clicked(); }
-    animate background { duration: 150ms; easing: ease-out; }
 
     Text {
         text: root.text;
         color: root.active ? Theme.on-accent : Theme.text;
-        font-size: Theme.font-small;
-        font-weight: root.active ? 600 : 400;
+        font-family: Theme.display;
+        font-size: Theme.font-small + 1px;
+        font-weight: root.active ? 700 : 500;
         horizontal-alignment: center;
         vertical-alignment: center;
     }

@@ -24,13 +24,13 @@ export component Banner inherits VerticalLayout {
 
     alignment: center;
     spacing: 10px;
-    padding: 40px;
+    padding: 56px;
 
     HorizontalLayout {
         alignment: center;
         Image {
             source: root.icon;
-            colorize: root.attention ? Theme.danger : Theme.text-muted;
+            colorize: root.attention ? Theme.danger : Theme.accent;
             width: 44px;
             height: 44px;
             opacity: root.pulse && root.dim ? 0.45 : 1;
@@ -42,19 +42,25 @@ export component Banner inherits VerticalLayout {
     Text {
         text: root.title;
         color: Theme.text;
-        font-size: Theme.font-title;
-        font-weight: 600;
+        font-family: Theme.display;
+        font-size: Theme.font-title + 3px;
+        font-weight: 700;
         horizontal-alignment: center;
         wrap: word-wrap;
         accessible-role: text;
     }
-    Text {
-        text: root.body;
-        color: Theme.text-muted;
-        font-size: Theme.font-body;
-        horizontal-alignment: center;
-        wrap: word-wrap;
-        accessible-role: text;
+    // Keep prose at a readable measure on the wide window.
+    HorizontalLayout {
+        alignment: center;
+        Text {
+            max-width: 440px;
+            text: root.body;
+            color: Theme.text-muted;
+            font-size: Theme.font-body;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+            accessible-role: text;
+        }
     }
     if root.action != "": HorizontalLayout {
         alignment: center;
@@ -63,7 +69,11 @@ export component Banner inherits VerticalLayout {
             width: label.preferred-width + 36px;
             height: Theme.control-height;
             border-radius: Theme.radius;
-            background: touch.has-hover ? Theme.focus : Theme.accent;
+            background: touch.has-hover
+                ? @linear-gradient(90deg, Theme.accent-hi 0%, Theme.focus 100%)
+                : @linear-gradient(90deg, Theme.accent 0%, Theme.accent-hi 100%);
+            drop-shadow-blur: 16px;
+            drop-shadow-color: Theme.accent-glow;
             border-width: scope.has-focus ? 2px : 0px;
             border-color: Theme.text;
             accessible-role: button;
@@ -72,8 +82,10 @@ export component Banner inherits VerticalLayout {
             label := Text {
                 text: root.action;
                 color: Theme.on-accent;
+                font-family: Theme.display;
                 font-size: Theme.font-body;
-                font-weight: 600;
+                font-weight: 700;
+                letter-spacing: 0.6px;
                 horizontal-alignment: center;
                 vertical-alignment: center;
             }

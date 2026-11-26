@@ -5,6 +5,7 @@ use std::rc::Rc;
 use std::time::Duration;
 
 use mousetune_core::{Brightness, Dpi, DpiPair, Effect, Led, PollingRate};
+use slint::winit_030::winit::window::WindowButtons;
 use slint::{ComponentHandle, Model, ModelRc, SharedString, Timer, VecModel};
 
 use crate::device_ops::Change;
@@ -43,7 +44,14 @@ pub fn run(
     // the system title bar of a transparent window shows the desktop behind
     // it. MouseTune never needs transparency, so ask for an opaque window.
     slint::BackendSelector::new()
-        .with_winit_window_attributes_hook(|attributes| attributes.with_transparent(false))
+        .with_winit_window_attributes_hook(|attributes| {
+            // The layout is designed for one fixed canvas: no resizing, no
+            // maximise or full screen.
+            attributes
+                .with_transparent(false)
+                .with_resizable(false)
+                .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE)
+        })
         .select()?;
 
     let window = MainWindow::new()?;
@@ -211,8 +219,8 @@ fn update_leds(window: &MainWindow, leds: &[LedState]) {
 
 fn led_title(led: Led) -> &'static str {
     match led {
-        Led::Logo => "Logo lighting",
-        Led::Scroll => "Scroll wheel lighting",
+        Led::Logo => "Logo",
+        Led::Scroll => "Scroll wheel",
     }
 }
 

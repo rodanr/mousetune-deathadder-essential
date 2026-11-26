@@ -23,20 +23,22 @@ export component Toggle inherits Rectangle {
         spacing: 10px;
         alignment: start;
         Rectangle {
-            width: 36px;
+            width: 38px;
             height: 20px;
             y: (parent.height - self.height) / 2;
-            border-radius: 10px;
+            border-radius: Theme.radius;
             background: root.checked ? Theme.accent : Theme.control;
             border-width: scope.has-focus ? 2px : 1px;
-            border-color: scope.has-focus ? Theme.focus : (root.checked ? Theme.accent : Theme.outline);
+            border-color: scope.has-focus ? Theme.focus : (root.checked ? Theme.accent : Theme.control-edge);
+            drop-shadow-blur: root.checked ? 10px : 0px;
+            drop-shadow-color: Theme.accent-glow;
             animate background { duration: 150ms; easing: ease-out; }
             Rectangle {
                 x: root.checked ? parent.width - self.width - 3px : 3px;
                 y: (parent.height - self.height) / 2;
                 width: 14px;
                 height: 14px;
-                border-radius: 7px;
+                border-radius: 2px;
                 background: root.checked ? Theme.on-accent : Theme.text-muted;
                 animate x { duration: 150ms; easing: ease-out; }
             }

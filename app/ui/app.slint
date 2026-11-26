@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import "fonts/Oxanium-Medium.ttf";
+import "fonts/Oxanium-SemiBold.ttf";
+import "fonts/Oxanium-Bold.ttf";
 import { Theme } from "theme.slint";
-import { Section, Divider } from "components/section.slint";
+import { HudPanel } from "components/hud-panel.slint";
+import { DpiDial } from "components/dpi-dial.slint";
 import { TuneSlider } from "components/tune-slider.slint";
 import { Segmented } from "components/segmented.slint";
 import { Chip } from "components/chip.slint";
@@ -26,14 +30,11 @@ export struct LedData {
 export component MainWindow inherits Window {
     title: "MouseTune for DeathAdder Essential";
     icon: @image-url("../../assets/icon-256.png");
-    background: Theme.surface;
-    // A fixed size: switching screens must never resize the window (on
-    // macOS that left the drawing surface out of sync with the frame).
-    // Content scrolls if the window is made smaller.
-    min-width: 420px;
-    min-height: 420px;
-    preferred-width: 460px;
-    preferred-height: 720px;
+    background: Theme.window;
+    // Fixed size: the layout is designed for exactly this canvas (the window
+    // is also made non-resizable, see ui::run).
+    width: 800px;
+    height: 560px;
 
     in property <Screen> screen: Screen.searching;
     in property <string> message;
@@ -51,8 +52,6 @@ export component MainWindow inherits Window {
     in property <[LedData]> leds;
     /// Bumped by the app on every worker event; sliders drop local edits.
     in property <int> epoch;
-    /// Preferred height of the current screen (used by the snapshot tool).
-    out property <length> content-height: content.preferred-height;
 
     callback apply-dpi(int, int);
     callback apply-polling(int);
@@ -62,214 +61,195 @@ export component MainWindow inherits Window {
     callback request-access();
 
     private property <[float]> presets: [400, 800, 1600, 3200, 6400];
+    /// Axis the dial edits in separate X/Y mode: 0 = X, 1 = Y.
+    private property <int> axis: 0;
+    private property <float> dial-value: root.separate-xy && root.axis == 1 ? root.dpi-y : root.dpi-x;
 
-    scroll := Flickable {
-        viewport-height: Math.max(content.preferred-height, self.height);
-
-    content := VerticalLayout {
-        width: scroll.width;
-        height: scroll.viewport-height;
-
-        if root.screen == Screen.searching: Banner {
-            icon: @image-url("icons/mouse.svg");
-            pulse: true;
-            title: "Connect your DeathAdder Essential";
-            body: "Plug in the mouse. MouseTune finds it automatically.";
+    function set-dial(v: float) {
+        if (!root.separate-xy) {
+            root.dpi-x = v;
+            root.dpi-y = v;
+        } else if (root.axis == 0) {
+            root.dpi-x = v;
+        } else {
+            root.dpi-y = v;
         }
-        if root.screen == Screen.unsupported: Banner {
-            icon: @image-url("icons/mouse-off.svg");
-            attention: true;
-            title: "This mouse isn't supported";
-            body: "MouseTune works with the DeathAdder Essential only.";
+    }
+
+    if root.screen == Screen.searching: Banner {
+        icon: @image-url("icons/mouse.svg");
+        pulse: true;
+        title: "Connect your DeathAdder Essential";
+        body: "Plug in the mouse. MouseTune finds it automatically.";
+    }
+    if root.screen == Screen.unsupported: Banner {
+        icon: @image-url("icons/mouse-off.svg");
+        attention: true;
+        title: "This mouse isn't supported";
+        body: "MouseTune works with the DeathAdder Essential only.";
+    }
+    if root.screen == Screen.permission: Banner {
+        icon: @image-url("icons/lock.svg");
+        title: "Allow Input Monitoring";
+        body: "macOS needs your permission before MouseTune can talk to the mouse. In System Settings, open Privacy & Security → Input Monitoring, switch MouseTune on, then reopen the app.";
+        action: "Open System Settings";
+        activated => {
+            root.request-access();
+            root.open-settings();
         }
-        if root.screen == Screen.permission: Banner {
-            icon: @image-url("icons/lock.svg");
-            title: "Allow Input Monitoring";
-            body: "macOS needs your permission before MouseTune can talk to the mouse. In System Settings, open Privacy & Security → Input Monitoring, switch MouseTune on, then reopen the app.";
-            action: "Open System Settings";
-            activated => {
-                root.request-access();
-                root.open-settings();
+    }
+    if root.screen == Screen.busy: Banner {
+        icon: @image-url("icons/alert.svg");
+        attention: true;
+        title: "Another app is using the mouse";
+        body: "Quit Razer Synapse or any other mouse utility, then unplug the mouse and plug it back in.";
+    }
+    if root.screen == Screen.error: Banner {
+        icon: @image-url("icons/alert.svg");
+        attention: true;
+        title: "Couldn't talk to the mouse";
+        body: root.message + "\nUnplug the mouse and plug it back in. MouseTune will retry.";
+    }
+
+    if root.screen == Screen.connected: VerticalLayout {
+        padding: Theme.page-pad;
+        spacing: Theme.gap;
+
+        // Header
+        HorizontalLayout {
+            spacing: 12px;
+            Image {
+                source: @image-url("../../assets/logo/mousetune-symbol-black.svg");
+                colorize: Theme.accent;
+                width: 34px;
+                height: 34px;
+                y: (parent.height - self.height) / 2;
+                accessible-role: none;
             }
-        }
-        if root.screen == Screen.busy: Banner {
-            icon: @image-url("icons/alert.svg");
-            attention: true;
-            title: "Another app is using the mouse";
-            body: "Quit Razer Synapse or any other mouse utility, then unplug the mouse and plug it back in.";
-        }
-        if root.screen == Screen.error: Banner {
-            icon: @image-url("icons/alert.svg");
-            attention: true;
-            title: "Couldn't talk to the mouse";
-            body: root.message + "\nUnplug the mouse and plug it back in. MouseTune will retry.";
-        }
-
-        if root.screen == Screen.connected: VerticalLayout {
-            // Pack sections to the top; a tall window must not stretch them apart.
-            alignment: start;
-            padding: Theme.page-pad;
-            padding-bottom: Theme.page-pad - Theme.section-pad;
-
-            // Header
-            HorizontalLayout {
-                padding-bottom: Theme.section-pad;
-                spacing: 12px;
-                Image {
-                    source: @image-url("../../assets/logo/mousetune-symbol-black.svg");
-                    colorize: Theme.accent;
-                    width: 34px;
-                    height: 34px;
-                    y: 4px;
-                    accessible-role: none;
+            VerticalLayout {
+                spacing: 1px;
+                Text {
+                    text: root.model-name;
+                    color: Theme.text;
+                    font-family: Theme.display;
+                    font-size: Theme.font-title;
+                    font-weight: 700;
+                    accessible-role: text;
                 }
-                VerticalLayout {
-                    spacing: 3px;
-                    Text {
-                        text: root.model-name;
-                        color: Theme.text;
-                        font-size: Theme.font-title;
-                        font-weight: 600;
-                        accessible-role: text;
-                    }
-                    Text {
-                        text: root.serial == "" ? "Firmware " + root.firmware : "Firmware " + root.firmware + "  ·  Serial " + root.serial;
-                        color: Theme.text-muted;
-                        font-size: Theme.font-small;
-                    }
+                Text {
+                    text: root.serial == "" ? "Firmware " + root.firmware : "Firmware " + root.firmware + "  ·  Serial " + root.serial;
+                    color: Theme.text-muted;
+                    font-size: Theme.font-small;
                 }
-                VerticalLayout {
-                    horizontal-stretch: 1;
-                    alignment: start;
-                    padding-top: 4px;
-                    HorizontalLayout {
-                        alignment: end;
-                        spacing: 6px;
+            }
+            Rectangle { horizontal-stretch: 1; }
+            // Status pill
+            VerticalLayout {
+                alignment: center;
+                Rectangle {
+                    width: pill.preferred-width + 24px;
+                    height: 26px;
+                    border-radius: Theme.radius;
+                    background: #3ee6a014;
+                    border-width: 1px;
+                    border-color: #3ee6a055;
+                    pill := HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 7px;
+                        alignment: center;
                         Rectangle {
-                            width: 8px;
+                            width: 7px;
                             Rectangle {
-                                width: 8px;
-                                height: 8px;
-                                border-radius: 4px;
+                                width: 7px;
+                                height: 7px;
+                                border-radius: 3.5px;
                                 background: Theme.success;
+                                drop-shadow-blur: 6px;
+                                drop-shadow-color: Theme.success;
                             }
                         }
                         Text {
-                            text: "Connected";
-                            color: Theme.text-muted;
-                            font-size: Theme.font-small;
+                            text: "CONNECTED";
+                            color: Theme.success;
+                            font-family: Theme.display;
+                            font-size: 11px;
+                            font-weight: 600;
+                            letter-spacing: Theme.label-tracking;
                             vertical-alignment: center;
                             accessible-role: text;
                         }
                     }
                 }
             }
-            Divider { }
+        }
 
-            Section {
-                title: "Sensitivity";
+        HorizontalLayout {
+            spacing: Theme.gap;
+
+            // Sensitivity: the hero
+            HudPanel {
+                width: 384px;
+                title: "SENSITIVITY";
                 status: root.dpi-status;
                 status-is-error: root.dpi-status-is-error;
 
                 HorizontalLayout {
-                    alignment: start;
-                    spacing: 8px;
-                    if root.separate-xy: Text {
-                        text: "X";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-body;
-                        vertical-alignment: center;
-                    }
-                    NumberField {
-                        label: root.separate-xy ? "Horizontal DPI" : "DPI";
-                        value: root.dpi-x;
-                        minimum: 100;
-                        maximum: 6400;
-                        step: 50;
-                        committed(v) => {
-                            root.dpi-x = v;
-                            if (!root.separate-xy) {
-                                root.dpi-y = v;
+                    alignment: center;
+                    DpiDial {
+                        label: root.separate-xy ? (root.axis == 0 ? "Horizontal DPI" : "Vertical DPI") : "DPI";
+                        value: root.dial-value;
+                        epoch: root.epoch;
+                        changed(v) => {
+                            root.set-dial(v);
+                        }
+                        released => {
+                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                        }
+
+                        HorizontalLayout {
+                            alignment: center;
+                            NumberField {
+                                label: root.separate-xy ? (root.axis == 0 ? "Horizontal DPI" : "Vertical DPI") : "DPI";
+                                value: root.dial-value;
+                                minimum: 100;
+                                maximum: 6400;
+                                step: 50;
+                                committed(v) => {
+                                    root.set-dial(v);
+                                    root.apply-dpi(root.dpi-x, root.dpi-y);
+                                }
                             }
-                            root.apply-dpi(root.dpi-x, root.dpi-y);
                         }
-                    }
-                    if root.separate-xy: Rectangle { width: 6px; }
-                    if root.separate-xy: Text {
-                        text: "Y";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-body;
-                        vertical-alignment: center;
-                    }
-                    if root.separate-xy: NumberField {
-                        label: "Vertical DPI";
-                        value: root.dpi-y;
-                        minimum: 100;
-                        maximum: 6400;
-                        step: 50;
-                        committed(v) => {
-                            root.dpi-y = v;
-                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                        Text {
+                            text: root.separate-xy ? (root.axis == 0 ? "X  ·  DPI" : "Y  ·  DPI") : "DPI";
+                            color: Theme.text-muted;
+                            font-family: Theme.display;
+                            font-size: Theme.font-label;
+                            font-weight: 600;
+                            letter-spacing: Theme.label-tracking;
+                            horizontal-alignment: center;
                         }
-                    }
-                    Text {
-                        text: "DPI";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-body;
-                        vertical-alignment: center;
+                        if root.separate-xy: Text {
+                            text: root.axis == 0 ? "Y " + Math.round(root.dpi-y) : "X " + Math.round(root.dpi-x);
+                            color: Theme.text-muted;
+                            font-family: Theme.display;
+                            font-size: Theme.font-small;
+                            horizontal-alignment: center;
+                        }
                     }
                 }
 
-                HorizontalLayout {
-                    spacing: 14px;
-                    if root.separate-xy: Text {
-                        text: "X";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-body;
-                        vertical-alignment: center;
-                        min-width: 14px;
-                    }
-                    TuneSlider {
-                        label: root.separate-xy ? "Horizontal DPI" : "DPI";
-                        minimum: 100;
-                        maximum: 6400;
-                        step: 50;
-                        logarithmic: true;
-                        value: root.dpi-x;
-                        epoch: root.epoch;
-                        changed(v) => {
-                            root.dpi-x = v;
-                            if (!root.separate-xy) {
-                                root.dpi-y = v;
-                            }
-                        }
-                        released => {
-                            root.apply-dpi(root.dpi-x, root.dpi-y);
-                        }
-                    }
-                }
                 if root.separate-xy: HorizontalLayout {
-                    spacing: 14px;
-                    Text {
-                        text: "Y";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-body;
-                        vertical-alignment: center;
-                        min-width: 14px;
-                    }
-                    TuneSlider {
-                        label: "Vertical DPI";
-                        minimum: 100;
-                        maximum: 6400;
-                        step: 50;
-                        logarithmic: true;
-                        value: root.dpi-y;
-                        epoch: root.epoch;
-                        changed(v) => {
-                            root.dpi-y = v;
-                        }
-                        released => {
-                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                    alignment: center;
+                    Segmented {
+                        width: 160px;
+                        height: 30px;
+                        label: "Axis the dial edits";
+                        options: ["X axis", "Y axis"];
+                        current: root.axis;
+                        selected(index) => {
+                            root.axis = index;
                         }
                     }
                 }
@@ -291,83 +271,126 @@ export component MainWindow inherits Window {
                     text: "Separate X and Y";
                     checked <=> root.separate-xy;
                     toggled(on) => {
-                        if (!on && root.dpi-y != root.dpi-x) {
-                            root.dpi-y = root.dpi-x;
-                            root.apply-dpi(root.dpi-x, root.dpi-x);
-                        }
-                    }
-                }
-            }
-            Divider { }
-
-            Section {
-                title: "Polling rate";
-                status: root.polling-status;
-                status-is-error: root.polling-status-is-error;
-
-                Segmented {
-                    label: "Polling rate";
-                    options: ["125 Hz", "500 Hz", "1000 Hz"];
-                    current: root.polling-index;
-                    selected(index) => {
-                        root.apply-polling(index);
-                    }
-                }
-            }
-
-            for led[index] in root.leds: VerticalLayout {
-                Divider { }
-                Section {
-                    title: led.name;
-                    status: led.status;
-                    status-is-error: led.status-is-error;
-
-                    Segmented {
-                        label: led.name + " effect";
-                        options: ["Off", "Static", "Breathe"];
-                        current: led.effect;
-                        selected(effect) => {
-                            root.apply-effect(led.id, effect);
-                        }
-                    }
-                    if led.effect == -1: Text {
-                        text: "The mouse can't report its current effect. Pick one to set it.";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-small;
-                        wrap: word-wrap;
-                    }
-                    HorizontalLayout {
-                        spacing: 14px;
-                        Text {
-                            text: "Brightness";
-                            color: Theme.text-muted;
-                            font-size: Theme.font-body;
-                            vertical-alignment: center;
-                            min-width: 76px;
-                        }
-                        brightness := TuneSlider {
-                            label: led.name + " brightness";
-                            minimum: 0;
-                            maximum: 100;
-                            step: 1;
-                            value: led.brightness;
-                            epoch: root.epoch;
-                            released(v) => {
-                                root.apply-brightness(led.id, Math.round(v));
+                        if (!on) {
+                            root.axis = 0;
+                            if (root.dpi-y != root.dpi-x) {
+                                root.dpi-y = root.dpi-x;
+                                root.apply-dpi(root.dpi-x, root.dpi-x);
                             }
                         }
-                        Text {
-                            text: Math.round(brightness.shown) + "%";
-                            color: Theme.text;
-                            font-size: Theme.font-body;
-                            min-width: 40px;
-                            horizontal-alignment: right;
-                            vertical-alignment: center;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                spacing: Theme.gap;
+
+                HudPanel {
+                    title: "POLLING RATE";
+                    status: root.polling-status;
+                    status-is-error: root.polling-status-is-error;
+
+                    Segmented {
+                        label: "Polling rate";
+                        options: ["125 Hz", "500 Hz", "1000 Hz"];
+                        current: root.polling-index;
+                        selected(index) => {
+                            root.apply-polling(index);
                         }
                     }
+                }
+
+                HudPanel {
+                    title: "LIGHTING";
+
+                    for led in root.leds: VerticalLayout {
+                        spacing: 8px;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text {
+                                text: led.name;
+                                color: Theme.text;
+                                font-family: Theme.display;
+                                font-size: Theme.font-body;
+                                font-weight: 600;
+                                vertical-alignment: center;
+                            }
+                            Rectangle { horizontal-stretch: 1; }
+                            if led.status != "" && !led.status-is-error: Image {
+                                source: @image-url("icons/check.svg");
+                                colorize: Theme.success;
+                                width: 13px;
+                                height: 13px;
+                                y: (parent.height - self.height) / 2;
+                                accessible-role: none;
+                            }
+                            Text {
+                                max-width: 220px;
+                                text: led.status;
+                                color: led.status-is-error ? Theme.danger : Theme.success;
+                                font-size: Theme.font-small;
+                                horizontal-alignment: right;
+                                vertical-alignment: center;
+                                wrap: word-wrap;
+                            }
+                        }
+                        Segmented {
+                            label: led.name + " effect";
+                            options: ["Off", "Static", "Breathe"];
+                            current: led.effect;
+                            selected(effect) => {
+                                root.apply-effect(led.id, effect);
+                            }
+                        }
+                        if led.effect == -1: Text {
+                            text: "The mouse can't report its current effect. Pick one to set it.";
+                            color: Theme.text-muted;
+                            font-size: Theme.font-small;
+                            wrap: word-wrap;
+                        }
+                        HorizontalLayout {
+                            spacing: 12px;
+                            Text {
+                                text: "Brightness";
+                                color: Theme.text-muted;
+                                font-size: Theme.font-small + 1px;
+                                vertical-alignment: center;
+                                min-width: 68px;
+                            }
+                            brightness := TuneSlider {
+                                label: led.name + " brightness";
+                                minimum: 0;
+                                maximum: 100;
+                                step: 1;
+                                value: led.brightness;
+                                epoch: root.epoch;
+                                released(v) => {
+                                    root.apply-brightness(led.id, Math.round(v));
+                                }
+                            }
+                            Text {
+                                text: Math.round(brightness.shown) + "%";
+                                color: Theme.text;
+                                font-family: Theme.display;
+                                font-size: Theme.font-body;
+                                font-weight: 600;
+                                min-width: 40px;
+                                horizontal-alignment: right;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+
+                Rectangle { vertical-stretch: 1; }
+
+                Text {
+                    text: "Changes are written to the mouse as you make them.";
+                    color: Theme.text-muted;
+                    font-size: Theme.font-small;
+                    horizontal-alignment: right;
                 }
             }
         }
-    }
     }
 }

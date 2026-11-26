@@ -115,8 +115,10 @@ Set `RUST_LOG=mousetune=debug` for detailed logs. The project layout:
 
 The USB protocol knowledge comes from the [OpenRazer](https://openrazer.github.io/)
 project (GPL-2.0-or-later). Thank you to its contributors for documenting these
-devices. The UI is built with [Slint](https://slint.dev/) and HID access uses
-[hidapi](https://github.com/ruabmbua/hidapi-rs).
+devices. The UI is built with [Slint](https://slint.dev/), HID access uses
+[hidapi](https://github.com/ruabmbua/hidapi-rs), and the display typeface is
+[Oxanium](https://github.com/sevmeyer/oxanium) by The Oxanium Project Authors,
+bundled under the SIL Open Font License 1.1 (`app/ui/fonts/Oxanium-OFL.txt`).
 
 ## License
 

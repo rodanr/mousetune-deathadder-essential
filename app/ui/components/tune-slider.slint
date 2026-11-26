@@ -77,18 +77,20 @@ export component TuneSlider inherits Rectangle {
     // Track
     Rectangle {
         y: root.track-y - self.height / 2;
-        height: 4px;
-        border-radius: 2px;
-        background: Theme.control;
+        height: 6px;
+        border-radius: 3px;
+        background: Theme.control-edge;
     }
     // Filled part
     Rectangle {
         x: 0;
         y: root.track-y - self.height / 2;
-        height: 4px;
+        height: 6px;
         width: root.fraction * (parent.width - root.handle-size) + root.handle-size / 2;
-        border-radius: 2px;
-        background: Theme.accent;
+        border-radius: 3px;
+        background: @linear-gradient(90deg, Theme.accent 0%, Theme.accent-hi 100%);
+        drop-shadow-blur: 8px;
+        drop-shadow-color: Theme.accent-glow;
     }
     // Focus ring
     Rectangle {
@@ -111,9 +113,8 @@ export component TuneSlider inherits Rectangle {
         background: #ffffff;
         border-width: touch.has-hover || touch.pressed ? 5px : 4px;
         border-color: Theme.accent;
-        drop-shadow-offset-y: 1px;
-        drop-shadow-blur: 3px;
-        drop-shadow-color: #00000040;
+        drop-shadow-blur: touch.has-hover || touch.pressed ? 14px : 8px;
+        drop-shadow-color: Theme.accent-glow;
     }
 
     focus := FocusScope {

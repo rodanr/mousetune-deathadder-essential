@@ -11,6 +11,8 @@ export component Segmented inherits Rectangle {
     height: Theme.control-height;
     background: Theme.control;
     border-radius: Theme.radius;
+    border-width: 1px;
+    border-color: Theme.control-edge;
     accessible-role: tab-list;
     accessible-label: root.label;
 
@@ -19,8 +21,12 @@ export component Segmented inherits Rectangle {
         spacing: 3px;
         for option[index] in root.options: Rectangle {
             property <bool> active: index == root.current;
-            border-radius: Theme.radius - 2px;
-            background: self.active ? Theme.accent : (touch.has-hover ? Theme.control-hover : transparent);
+            border-radius: Theme.radius - 1px;
+            background: self.active
+                ? @linear-gradient(90deg, Theme.accent 0%, Theme.accent-hi 100%)
+                : (touch.has-hover ? Theme.control-hover : transparent);
+            drop-shadow-blur: self.active ? 12px : 0px;
+            drop-shadow-color: Theme.accent-glow;
             border-width: scope.has-focus ? 2px : 0px;
             border-color: Theme.focus;
             accessible-role: tab;
@@ -28,13 +34,14 @@ export component Segmented inherits Rectangle {
             accessible-checkable: true;
             accessible-checked: self.active;
             accessible-action-default => { root.selected(index); }
-            animate background { duration: 150ms; easing: ease-out; }
 
             Text {
                 text: option;
                 color: parent.active ? Theme.on-accent : Theme.text;
+                font-family: Theme.display;
                 font-size: Theme.font-body;
-                font-weight: parent.active ? 600 : 400;
+                font-weight: parent.active ? 700 : 500;
+                letter-spacing: 0.4px;
                 horizontal-alignment: center;
                 vertical-alignment: center;
             }
