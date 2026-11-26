@@ -1,12 +1,11 @@
 # MouseTune for DeathAdder Essential: settings app for macOS, Windows and Linux
 
-<!-- TODO: replace with a real screenshot of the app (docs/screenshot.png) -->
-![MouseTune screenshot placeholder](docs/screenshot.png)
+![MouseTune showing DPI, polling rate and lighting settings for a DeathAdder Essential](docs/screenshot.png)
 
 MouseTune is a small, free and open-source app that sets **DPI, polling rate and
-LED lighting** on the Razer DeathAdder Essential without Razer Synapse. Settings
-are stored on the mouse itself, so MouseTune does not need to keep running:
-open it, change what you want, quit.
+LED lighting** on the Razer DeathAdder Essential without Razer Synapse. Changes are
+written to the mouse, so MouseTune does not need to keep running: open it,
+change what you want, quit.
 
 **macOS is the primary platform** and the one this project is developed on.
 Windows and Linux builds are produced by CI and are community-tested.
@@ -89,6 +88,7 @@ install `libudev-dev libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-dev`.
 cargo run --release --package mousetune   # run the app
 cargo test --workspace                    # run the tests (no mouse needed)
 ./scripts/bundle-macos.sh                 # macOS: universal .app, .zip and .dmg in dist/
+cargo run -p mousetune --example snapshots --features snapshots   # render every screen to docs/screenshots/
 ```
 
 Set `RUST_LOG=mousetune=debug` for detailed logs. The project layout:

@@ -21,7 +21,16 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
+png = "0.18"
 tempfile = "3"
+
+[features]
+# Offscreen rendering for `cargo run --example snapshots --features snapshots`.
+snapshots = ["slint/software-renderer-systemfonts"]
+
+[[example]]
+name = "snapshots"
+required-features = ["snapshots"]
 
 [build-dependencies]
 slint-build = "1"
