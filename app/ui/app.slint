@@ -6,6 +6,7 @@ import { Segmented } from "components/segmented.slint";
 import { Chip } from "components/chip.slint";
 import { Toggle } from "components/toggle.slint";
 import { Banner } from "components/banner.slint";
+import { NumberField } from "components/number-field.slint";
 
 export { Theme }
 
@@ -26,8 +27,13 @@ export component MainWindow inherits Window {
     title: "MouseTune for DeathAdder Essential";
     icon: @image-url("../../assets/icon-256.png");
     background: Theme.surface;
+    // A fixed size: switching screens must never resize the window (on
+    // macOS that left the drawing surface out of sync with the frame).
+    // Content scrolls if the window is made smaller.
     min-width: 420px;
+    min-height: 420px;
     preferred-width: 460px;
+    preferred-height: 720px;
 
     in property <Screen> screen: Screen.searching;
     in property <string> message;
@@ -55,11 +61,18 @@ export component MainWindow inherits Window {
     callback open-settings();
     callback request-access();
 
-    private property <[int]> presets: [400, 800, 1600, 3200, 6400];
+    private property <[float]> presets: [400, 800, 1600, 3200, 6400];
+
+    scroll := Flickable {
+        viewport-height: Math.max(content.preferred-height, self.height);
 
     content := VerticalLayout {
+        width: scroll.width;
+        height: scroll.viewport-height;
+
         if root.screen == Screen.searching: Banner {
             icon: @image-url("icons/mouse.svg");
+            pulse: true;
             title: "Connect your DeathAdder Essential";
             body: "Plug in the mouse. MouseTune finds it automatically.";
         }
@@ -100,6 +113,14 @@ export component MainWindow inherits Window {
             HorizontalLayout {
                 padding-bottom: Theme.section-pad;
                 spacing: 12px;
+                Image {
+                    source: @image-url("../../assets/logo/mousetune-symbol-black.svg");
+                    colorize: Theme.accent;
+                    width: 34px;
+                    height: 34px;
+                    y: 4px;
+                    accessible-role: none;
+                }
                 VerticalLayout {
                     spacing: 3px;
                     Text {
@@ -115,26 +136,29 @@ export component MainWindow inherits Window {
                         font-size: Theme.font-small;
                     }
                 }
-                HorizontalLayout {
+                VerticalLayout {
                     horizontal-stretch: 1;
-                    alignment: end;
-                    spacing: 6px;
-                    Rectangle {
-                        width: 8px;
-                        height: status-text.preferred-height;
+                    alignment: start;
+                    padding-top: 4px;
+                    HorizontalLayout {
+                        alignment: end;
+                        spacing: 6px;
                         Rectangle {
                             width: 8px;
-                            height: 8px;
-                            border-radius: 4px;
-                            background: Theme.success;
+                            Rectangle {
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 4px;
+                                background: Theme.success;
+                            }
                         }
-                    }
-                    status-text := Text {
-                        text: "Connected";
-                        color: Theme.text-muted;
-                        font-size: Theme.font-small;
-                        vertical-alignment: center;
-                        accessible-role: text;
+                        Text {
+                            text: "Connected";
+                            color: Theme.text-muted;
+                            font-size: Theme.font-small;
+                            vertical-alignment: center;
+                            accessible-role: text;
+                        }
                     }
                 }
             }
@@ -147,19 +171,50 @@ export component MainWindow inherits Window {
 
                 HorizontalLayout {
                     alignment: start;
-                    spacing: 6px;
-                    Text {
-                        text: root.separate-xy ? "X " + root.dpi-x + "  Y " + root.dpi-y : root.dpi-x;
-                        color: Theme.text;
-                        font-size: Theme.font-value;
-                        font-weight: 600;
-                        accessible-role: text;
+                    spacing: 8px;
+                    if root.separate-xy: Text {
+                        text: "X";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-body;
+                        vertical-alignment: center;
+                    }
+                    NumberField {
+                        label: root.separate-xy ? "Horizontal DPI" : "DPI";
+                        value: root.dpi-x;
+                        minimum: 100;
+                        maximum: 6400;
+                        step: 50;
+                        committed(v) => {
+                            root.dpi-x = v;
+                            if (!root.separate-xy) {
+                                root.dpi-y = v;
+                            }
+                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                        }
+                    }
+                    if root.separate-xy: Rectangle { width: 6px; }
+                    if root.separate-xy: Text {
+                        text: "Y";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-body;
+                        vertical-alignment: center;
+                    }
+                    if root.separate-xy: NumberField {
+                        label: "Vertical DPI";
+                        value: root.dpi-y;
+                        minimum: 100;
+                        maximum: 6400;
+                        step: 50;
+                        committed(v) => {
+                            root.dpi-y = v;
+                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                        }
                     }
                     Text {
-                        y: 14px;
                         text: "DPI";
                         color: Theme.text-muted;
                         font-size: Theme.font-body;
+                        vertical-alignment: center;
                     }
                 }
 
@@ -177,6 +232,7 @@ export component MainWindow inherits Window {
                         minimum: 100;
                         maximum: 6400;
                         step: 50;
+                        logarithmic: true;
                         value: root.dpi-x;
                         epoch: root.epoch;
                         changed(v) => {
@@ -204,6 +260,7 @@ export component MainWindow inherits Window {
                         minimum: 100;
                         maximum: 6400;
                         step: 50;
+                        logarithmic: true;
                         value: root.dpi-y;
                         epoch: root.epoch;
                         changed(v) => {
@@ -309,5 +366,6 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
     }
 }

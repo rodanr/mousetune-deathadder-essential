@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// A large numeric readout you can click and type into. Enter commits
+/// (rounded to `step` and clamped), leaving the field reverts.
+export component NumberField inherits Rectangle {
+    in property <float> value;
+    in property <float> minimum;
+    in property <float> maximum;
+    in property <float> step: 1;
+    in property <string> label;
+    callback committed(float);
+
+    private property <bool> editing: input.has-focus;
+
+    // The digits align with surrounding text; the hover/edit background
+    // extends outward instead of indenting them.
+    width: input.preferred-width;
+    height: input.preferred-height;
+    accessible-role: text-input;
+    accessible-label: root.label;
+    accessible-value: input.text;
+
+    function reset() {
+        input.text = Math.round(root.value);
+    }
+
+    init => {
+        root.reset();
+    }
+    changed value => {
+        if (!root.editing) {
+            root.reset();
+        }
+    }
+    changed editing => {
+        if (!root.editing) {
+            root.reset();
+        }
+    }
+
+    Rectangle {
+        x: -6px;
+        y: -2px;
+        width: parent.width + 12px;
+        height: parent.height + 4px;
+        border-radius: 6px;
+        background: root.editing || touch.has-hover ? Theme.control : transparent;
+        border-width: root.editing ? 2px : 0px;
+        border-color: Theme.focus;
+    }
+
+    touch := TouchArea {
+        mouse-cursor: text;
+        clicked => {
+            input.focus();
+            input.select-all();
+        }
+    }
+
+    input := TextInput {
+        width: self.preferred-width;
+        color: Theme.text;
+        selection-background-color: Theme.accent;
+        selection-foreground-color: Theme.on-accent;
+        font-size: Theme.font-value;
+        font-weight: 600;
+        input-type: number;
+        single-line: true;
+        accepted => {
+            if (self.text.is-float()) {
+                let snapped = Math.clamp(Math.round(self.text.to-float() / root.step) * root.step, root.minimum, root.maximum);
+                self.text = snapped;
+                root.committed(snapped);
+            }
+            self.clear-focus();
+        }
+    }
+}

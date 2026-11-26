@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { Theme } from "../theme.slint";
 
-/// Horizontal slider.
+/// Horizontal slider, optionally logarithmic.
 ///
 /// `value` always comes from the parent and is never overwritten here, so it
 /// keeps following the device. While the user drags (and until the next
@@ -15,6 +15,9 @@ export component TuneSlider inherits Rectangle {
     in property <float> value;
     in property <int> epoch;
     in property <string> label;
+    /// Equal travel per doubling: gives low values (where most DPI settings
+    /// live) as much room as high ones.
+    in property <bool> logarithmic;
     out property <float> shown: root.editing ? root.local : root.value;
     callback changed(float);
     callback released(float);
@@ -22,7 +25,7 @@ export component TuneSlider inherits Rectangle {
     private property <bool> editing;
     private property <float> local;
     private property <length> handle-size: 18px;
-    private property <float> fraction: (root.shown - root.minimum) / (root.maximum - root.minimum);
+    private property <float> fraction: root.to-fraction(root.shown);
 
     changed epoch => {
         root.editing = false;
@@ -39,6 +42,21 @@ export component TuneSlider inherits Rectangle {
     accessible-action-increment => { root.nudge(1); }
     accessible-action-decrement => { root.nudge(-1); }
 
+    pure function to-fraction(v: float) -> float {
+        if (root.logarithmic) {
+            return Math.ln(Math.max(v, root.minimum) / root.minimum) / Math.ln(root.maximum / root.minimum);
+        }
+        return (v - root.minimum) / (root.maximum - root.minimum);
+    }
+
+    pure function from-fraction(t: float) -> float {
+        let clamped = Math.clamp(t, 0, 1);
+        if (root.logarithmic) {
+            return root.minimum * Math.exp(clamped * Math.ln(root.maximum / root.minimum));
+        }
+        return root.minimum + clamped * (root.maximum - root.minimum);
+    }
+
     function snap(raw: float) -> float {
         return Math.clamp(Math.round(raw / root.step) * root.step, root.minimum, root.maximum);
     }
@@ -54,9 +72,11 @@ export component TuneSlider inherits Rectangle {
         root.released(root.local);
     }
 
+    private property <length> track-y: 14px;
+
     // Track
     Rectangle {
-        y: (parent.height - self.height) / 2;
+        y: root.track-y - self.height / 2;
         height: 4px;
         border-radius: 2px;
         background: Theme.control;
@@ -64,7 +84,7 @@ export component TuneSlider inherits Rectangle {
     // Filled part
     Rectangle {
         x: 0;
-        y: (parent.height - self.height) / 2;
+        y: root.track-y - self.height / 2;
         height: 4px;
         width: root.fraction * (parent.width - root.handle-size) + root.handle-size / 2;
         border-radius: 2px;
@@ -74,7 +94,7 @@ export component TuneSlider inherits Rectangle {
     Rectangle {
         visible: focus.has-focus;
         x: root.fraction * (parent.width - root.handle-size) - 4px;
-        y: (parent.height - self.height) / 2;
+        y: root.track-y - self.height / 2;
         width: root.handle-size + 8px;
         height: root.handle-size + 8px;
         border-radius: self.height / 2;
@@ -84,7 +104,7 @@ export component TuneSlider inherits Rectangle {
     // Handle
     Rectangle {
         x: root.fraction * (parent.width - root.handle-size);
-        y: (parent.height - self.height) / 2;
+        y: root.track-y - self.height / 2;
         width: root.handle-size;
         height: root.handle-size;
         border-radius: root.handle-size / 2;
@@ -114,7 +134,7 @@ export component TuneSlider inherits Rectangle {
         mouse-cursor: pointer;
         function pointer-value() -> float {
             let usable = self.width - root.handle-size;
-            return root.minimum + (self.mouse-x - root.handle-size / 2) / usable * (root.maximum - root.minimum);
+            return root.from-fraction((self.mouse-x - root.handle-size / 2) / usable);
         }
         pointer-event(event) => {
             if (event.button == PointerEventButton.left) {
