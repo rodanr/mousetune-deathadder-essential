@@ -1,0 +1,25 @@
+[package]
+name = "mousetune"
+description = "MouseTune for DeathAdder Essential: settings app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+mousetune-core = { path = "../crates/mousetune-core" }
+mousetune-hid = { path = "../crates/mousetune-hid" }
+anyhow = "1"
+directories = "6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true
