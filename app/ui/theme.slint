@@ -3,34 +3,38 @@
 import { Palette } from "std-widgets.slint";
 
 export global Theme {
-    out property <bool> dark: Palette.color-scheme != ColorScheme.light;
+    // Follows the OS appearance; the snapshot tool overrides it.
+    in-out property <bool> dark: Palette.color-scheme != ColorScheme.light;
 
-    // Surfaces
-    out property <color> window: dark ? #0f1216 : #f3f4f7;
-    out property <color> surface: dark ? #171b21 : #ffffff;
-    out property <color> surface-raised: dark ? #1f242c : #eceef3;
-    out property <color> border: dark ? #2b313b : #d6dae1;
+    // Surfaces: one content layer plus a quieter layer for control tracks.
+    out property <color> surface: dark ? #14181d : #ffffff;
+    out property <color> control: dark ? #1f252d : #eef0f4;
+    out property <color> control-hover: dark ? #283039 : #e2e6ec;
+    out property <color> divider: dark ? #262c34 : #e3e6eb;
+    out property <color> outline: dark ? #343c47 : #cdd2da;
 
     // Text
     out property <color> text: dark ? #eceff4 : #131820;
     out property <color> text-muted: dark ? #9aa4b2 : #566070;
 
-    // Accent and status
+    // Accent is reserved for the current value and selection.
     out property <color> accent: dark ? #5b9bff : #2563d9;
     out property <color> on-accent: dark ? #08111f : #ffffff;
-    out property <color> danger: dark ? #ff7a7a : #c62828;
-    out property <color> success: dark ? #4cd9a0 : #0f8a5f;
+    out property <color> focus: dark ? #9cc2ff : #1b4fb0;
+    out property <color> danger: dark ? #ff8a80 : #c62828;
+    out property <color> success: dark ? #4cd9a0 : #0b7a53;
 
     // Geometry
-    out property <length> radius-card: 14px;
-    out property <length> radius-control: 8px;
+    out property <length> radius: 8px;
+    out property <length> page-pad: 24px;
+    out property <length> section-pad: 20px;
     out property <length> gap: 12px;
-    out property <length> pad: 18px;
-    out property <length> control-height: 36px;
+    out property <length> control-height: 34px;
 
-    // Type
-    out property <length> font-title: 20px;
-    out property <length> font-body: 14px;
+    // Type: one family (the platform UI font), tight 1.2 scale.
     out property <length> font-small: 12px;
-    out property <length> font-display: 30px;
+    out property <length> font-body: 14px;
+    out property <length> font-heading: 15px;
+    out property <length> font-title: 20px;
+    out property <length> font-value: 28px;
 }

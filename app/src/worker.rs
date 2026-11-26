@@ -194,9 +194,11 @@ impl<F: Fn(Event)> Worker<F> {
                 if let Change::Effect(led, effect) = change {
                     self.prefs.set_effect(&active.state.serial, led, effect);
                 }
+                // State first: the UI releases a slider's local value on the
+                // next event, which must already carry the new device value.
                 let state = active.state.clone();
-                (self.emit)(Event::Applied(section));
                 self.show(AppState::Connected(state));
+                (self.emit)(Event::Applied(section));
             }
             Err(error) => {
                 let lost = matches!(error, Error::Transport(TransportError::Disconnected));

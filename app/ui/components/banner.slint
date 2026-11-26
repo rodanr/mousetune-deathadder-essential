@@ -1,58 +1,66 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { Theme } from "../theme.slint";
 
-/// Full-window message for the "no mouse / needs attention" states, with one
-/// optional primary action.
-export component Banner inherits Rectangle {
+/// Full-window message for the states where no settings can be shown, with
+/// one optional primary action.
+export component Banner inherits VerticalLayout {
+    in property <image> icon;
     in property <string> title;
     in property <string> body;
     in property <string> action;
     in property <bool> attention;
     callback activated();
 
-    VerticalLayout {
-        alignment: center;
-        spacing: 14px;
-        padding: 32px;
+    alignment: center;
+    spacing: 10px;
+    padding: 40px;
 
+    HorizontalLayout {
+        alignment: center;
+        Image {
+            source: root.icon;
+            colorize: root.attention ? Theme.danger : Theme.text-muted;
+            width: 44px;
+            height: 44px;
+            accessible-role: none;
+        }
+    }
+    Rectangle { height: 6px; }
+    Text {
+        text: root.title;
+        color: Theme.text;
+        font-size: Theme.font-title;
+        font-weight: 600;
+        horizontal-alignment: center;
+        wrap: word-wrap;
+        accessible-role: text;
+    }
+    Text {
+        text: root.body;
+        color: Theme.text-muted;
+        font-size: Theme.font-body;
+        horizontal-alignment: center;
+        wrap: word-wrap;
+        accessible-role: text;
+    }
+    if root.action != "": HorizontalLayout {
+        alignment: center;
+        padding-top: 10px;
         Rectangle {
-            width: 56px;
-            height: 56px;
-            border-radius: 28px;
-            border-width: 3px;
-            border-color: root.attention ? Theme.danger : Theme.accent;
-            background: transparent;
-        }
-        Text {
-            text: root.title;
-            color: Theme.text;
-            font-size: Theme.font-title;
-            font-weight: 700;
-            horizontal-alignment: center;
-            wrap: word-wrap;
-            accessible-role: text;
-        }
-        Text {
-            text: root.body;
-            color: Theme.text-muted;
-            font-size: Theme.font-body;
-            horizontal-alignment: center;
-            wrap: word-wrap;
-        }
-        if root.action != "": Rectangle {
+            width: label.preferred-width + 36px;
             height: Theme.control-height;
-            border-radius: Theme.radius-control;
-            background: Theme.accent;
+            border-radius: Theme.radius;
+            background: touch.has-hover ? Theme.focus : Theme.accent;
             border-width: scope.has-focus ? 2px : 0px;
             border-color: Theme.text;
             accessible-role: button;
             accessible-label: root.action;
             accessible-action-default => { root.activated(); }
-            Text {
+            label := Text {
                 text: root.action;
                 color: Theme.on-accent;
                 font-size: Theme.font-body;
-                font-weight: 700;
+                font-weight: 600;
                 horizontal-alignment: center;
                 vertical-alignment: center;
             }
@@ -65,7 +73,7 @@ export component Banner inherits Rectangle {
                     return reject;
                 }
             }
-            TouchArea {
+            touch := TouchArea {
                 mouse-cursor: pointer;
                 clicked => {
                     scope.focus();

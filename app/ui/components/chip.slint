@@ -5,31 +5,29 @@ import { Theme } from "../theme.slint";
 export component Chip inherits Rectangle {
     in property <string> text;
     in property <bool> active;
-    in property <bool> enabled: true;
     callback clicked();
 
     height: 30px;
     horizontal-stretch: 1;
-    border-radius: Theme.radius-control;
-    background: root.active ? Theme.accent : (touch.has-hover ? Theme.border : Theme.surface-raised);
-    border-width: scope.has-focus ? 2px : 1px;
-    border-color: scope.has-focus ? Theme.text : Theme.border;
-    opacity: root.enabled ? 1 : 0.4;
+    border-radius: Theme.radius;
+    background: root.active ? Theme.accent : (touch.has-hover ? Theme.control-hover : Theme.control);
+    border-width: scope.has-focus ? 2px : 0px;
+    border-color: Theme.focus;
     accessible-role: button;
-    accessible-label: root.text;
+    accessible-label: root.text + " DPI";
     accessible-action-default => { root.clicked(); }
+    animate background { duration: 150ms; easing: ease-out; }
 
     Text {
         text: root.text;
         color: root.active ? Theme.on-accent : Theme.text;
         font-size: Theme.font-small;
-        font-weight: root.active ? 700 : 400;
+        font-weight: root.active ? 600 : 400;
         horizontal-alignment: center;
         vertical-alignment: center;
     }
 
     scope := FocusScope {
-        enabled: root.enabled;
         key-pressed(event) => {
             if (event.text == " " || event.text == "\n") {
                 root.clicked();
@@ -39,7 +37,6 @@ export component Chip inherits Rectangle {
         }
     }
     touch := TouchArea {
-        enabled: root.enabled;
         mouse-cursor: pointer;
         clicked => {
             scope.focus();

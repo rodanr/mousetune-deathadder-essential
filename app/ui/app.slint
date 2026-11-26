@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { Theme } from "theme.slint";
-import { Card } from "components/card.slint";
+import { Section, Divider } from "components/section.slint";
 import { TuneSlider } from "components/tune-slider.slint";
 import { Segmented } from "components/segmented.slint";
 import { Chip } from "components/chip.slint";
 import { Toggle } from "components/toggle.slint";
 import { Banner } from "components/banner.slint";
 
+export { Theme }
+
 /// Which screen the window shows.
 export enum Screen { searching, unsupported, permission, busy, error, connected }
 
-/// One LED card. `effect` is -1 while the effect is unknown.
+/// One LED. `effect` is -1 while unknown; `brightness` is a percentage.
 export struct LedData {
     id: int,
     name: string,
@@ -22,19 +24,18 @@ export struct LedData {
 
 export component MainWindow inherits Window {
     title: "MouseTune for DeathAdder Essential";
-    background: Theme.window;
-    min-width: 440px;
-    preferred-width: 500px;
-    min-height: 420px;
-    default-font-family: "Inter";
+    icon: @image-url("../../assets/icon-256.png");
+    background: Theme.surface;
+    min-width: 420px;
+    preferred-width: 460px;
 
     in property <Screen> screen: Screen.searching;
     in property <string> message;
     in property <string> model-name;
     in property <string> firmware;
     in property <string> serial;
-    in-out property <int> dpi-x: 800;
-    in-out property <int> dpi-y: 800;
+    in-out property <float> dpi-x: 800;
+    in-out property <float> dpi-y: 800;
     in-out property <bool> separate-xy: false;
     in property <string> dpi-status;
     in property <bool> dpi-status-is-error;
@@ -42,6 +43,10 @@ export component MainWindow inherits Window {
     in property <string> polling-status;
     in property <bool> polling-status-is-error;
     in property <[LedData]> leds;
+    /// Bumped by the app on every worker event; sliders drop local edits.
+    in property <int> epoch;
+    /// Preferred height of the current screen (used by the snapshot tool).
+    out property <length> content-height: content.preferred-height;
 
     callback apply-dpi(int, int);
     callback apply-polling(int);
@@ -52,199 +57,255 @@ export component MainWindow inherits Window {
 
     private property <[int]> presets: [400, 800, 1600, 3200, 6400];
 
-    if root.screen == Screen.searching: Banner {
-        title: "Connect your DeathAdder Essential";
-        body: "Plug the mouse in. MouseTune detects it automatically.";
-    }
-    if root.screen == Screen.unsupported: Banner {
-        attention: true;
-        title: "This mouse isn't supported";
-        body: "MouseTune works with the DeathAdder Essential only.";
-    }
-    if root.screen == Screen.permission: Banner {
-        attention: true;
-        title: "Allow Input Monitoring";
-        body: "macOS needs your permission before MouseTune can talk to the mouse.\n\nOpen System Settings → Privacy & Security → Input Monitoring, switch MouseTune on, then reopen the app.";
-        action: "Open System Settings";
-        activated => {
-            root.request-access();
-            root.open-settings();
+    content := VerticalLayout {
+        if root.screen == Screen.searching: Banner {
+            icon: @image-url("icons/mouse.svg");
+            title: "Connect your DeathAdder Essential";
+            body: "Plug in the mouse. MouseTune finds it automatically.";
         }
-    }
-    if root.screen == Screen.busy: Banner {
-        attention: true;
-        title: "Another app is using the mouse";
-        body: "Quit Razer Synapse or any other mouse utility, then unplug and replug the mouse.";
-    }
-    if root.screen == Screen.error: Banner {
-        attention: true;
-        title: "Something went wrong";
-        body: root.message;
-    }
-
-    if root.screen == Screen.connected: VerticalLayout {
-        padding: 20px;
-        spacing: Theme.gap;
-
-        // Header
-        HorizontalLayout {
-            spacing: 10px;
-            VerticalLayout {
-                spacing: 2px;
-                Text {
-                    text: root.model-name;
-                    color: Theme.text;
-                    font-size: Theme.font-title;
-                    font-weight: 700;
-                    accessible-role: text;
-                }
-                Text {
-                    text: "Firmware " + root.firmware + "  ·  " + root.serial;
-                    color: Theme.text-muted;
-                    font-size: Theme.font-small;
-                }
-            }
-            Rectangle { horizontal-stretch: 1; }
-            HorizontalLayout {
-                spacing: 6px;
-                alignment: end;
-                Rectangle {
-                    y: (parent.height - self.height) / 2;
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 4px;
-                    background: Theme.success;
-                }
-                Text {
-                    text: "Connected";
-                    color: Theme.text-muted;
-                    font-size: Theme.font-small;
-                    vertical-alignment: center;
-                }
+        if root.screen == Screen.unsupported: Banner {
+            icon: @image-url("icons/mouse-off.svg");
+            attention: true;
+            title: "This mouse isn't supported";
+            body: "MouseTune works with the DeathAdder Essential only.";
+        }
+        if root.screen == Screen.permission: Banner {
+            icon: @image-url("icons/lock.svg");
+            title: "Allow Input Monitoring";
+            body: "macOS needs your permission before MouseTune can talk to the mouse. In System Settings, open Privacy & Security → Input Monitoring, switch MouseTune on, then reopen the app.";
+            action: "Open System Settings";
+            activated => {
+                root.request-access();
+                root.open-settings();
             }
         }
-
-        // DPI
-        Card {
-            title: "SENSITIVITY";
-            status: root.dpi-status;
-            status-is-error: root.dpi-status-is-error;
-
-            HorizontalLayout {
-                alignment: start;
-                spacing: 8px;
-                Text {
-                    text: root.separate-xy ? "X " + root.dpi-x + "   Y " + root.dpi-y : root.dpi-x;
-                    color: Theme.text;
-                    font-size: Theme.font-display;
-                    font-weight: 700;
-                    vertical-alignment: bottom;
-                    accessible-role: text;
-                }
-                Text {
-                    text: "DPI";
-                    color: Theme.text-muted;
-                    font-size: Theme.font-body;
-                    vertical-alignment: bottom;
-                }
-            }
-
-            TuneSlider {
-                label: root.separate-xy ? "Horizontal DPI" : "DPI";
-                minimum: 100;
-                maximum: 6400;
-                step: 50;
-                value: root.dpi-x;
-                changed(v) => {
-                    root.dpi-x = Math.round(v);
-                    if (!root.separate-xy) { root.dpi-y = Math.round(v); }
-                }
-                released(v) => { root.apply-dpi(root.dpi-x, root.dpi-y); }
-            }
-            if root.separate-xy: TuneSlider {
-                label: "Vertical DPI";
-                minimum: 100;
-                maximum: 6400;
-                step: 50;
-                value: root.dpi-y;
-                changed(v) => { root.dpi-y = Math.round(v); }
-                released(v) => { root.apply-dpi(root.dpi-x, root.dpi-y); }
-            }
-
-            HorizontalLayout {
-                spacing: 6px;
-                for preset in root.presets: Chip {
-                    text: preset;
-                    active: root.dpi-x == preset && root.dpi-y == preset;
-                    clicked => {
-                        root.dpi-x = preset;
-                        root.dpi-y = preset;
-                        root.apply-dpi(preset, preset);
-                    }
-                }
-            }
-
-            Toggle {
-                text: "Separate X / Y";
-                checked <=> root.separate-xy;
-                toggled(on) => {
-                    if (!on) {
-                        root.dpi-y = root.dpi-x;
-                        root.apply-dpi(root.dpi-x, root.dpi-x);
-                    }
-                }
-            }
+        if root.screen == Screen.busy: Banner {
+            icon: @image-url("icons/alert.svg");
+            attention: true;
+            title: "Another app is using the mouse";
+            body: "Quit Razer Synapse or any other mouse utility, then unplug the mouse and plug it back in.";
+        }
+        if root.screen == Screen.error: Banner {
+            icon: @image-url("icons/alert.svg");
+            attention: true;
+            title: "Couldn't talk to the mouse";
+            body: root.message + "\nUnplug the mouse and plug it back in. MouseTune will retry.";
         }
 
-        // Polling rate
-        Card {
-            title: "POLLING RATE";
-            status: root.polling-status;
-            status-is-error: root.polling-status-is-error;
+        if root.screen == Screen.connected: VerticalLayout {
+            padding: Theme.page-pad;
+            padding-bottom: Theme.page-pad - Theme.section-pad;
 
-            Segmented {
-                label: "Polling rate";
-                options: ["125 Hz", "500 Hz", "1000 Hz"];
-                current: root.polling-index;
-                selected(index) => { root.apply-polling(index); }
-            }
-        }
-
-        // Lighting
-        for led in root.leds: Card {
-            title: "LIGHTING · " + led.name;
-            status: led.status;
-            status-is-error: led.status-is-error;
-
-            Segmented {
-                label: led.name + " effect";
-                options: ["Off", "Static", "Breathe"];
-                current: led.effect;
-                selected(index) => { root.apply-effect(led.id, index); }
-            }
+            // Header
             HorizontalLayout {
+                padding-bottom: Theme.section-pad;
                 spacing: 12px;
-                Text {
-                    text: "Brightness";
-                    color: Theme.text-muted;
-                    font-size: Theme.font-small;
-                    vertical-alignment: center;
+                VerticalLayout {
+                    spacing: 3px;
+                    Text {
+                        text: root.model-name;
+                        color: Theme.text;
+                        font-size: Theme.font-title;
+                        font-weight: 600;
+                        accessible-role: text;
+                    }
+                    Text {
+                        text: root.serial == "" ? "Firmware " + root.firmware : "Firmware " + root.firmware + "  ·  Serial " + root.serial;
+                        color: Theme.text-muted;
+                        font-size: Theme.font-small;
+                    }
                 }
-                brightness := TuneSlider {
-                    label: led.name + " brightness";
-                    minimum: 0;
-                    maximum: 100;
-                    step: 1;
-                    value: led.brightness;
-                    released(v) => { root.apply-brightness(led.id, Math.round(v)); }
+                HorizontalLayout {
+                    horizontal-stretch: 1;
+                    alignment: end;
+                    spacing: 6px;
+                    Rectangle {
+                        width: 8px;
+                        height: status-text.preferred-height;
+                        Rectangle {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 4px;
+                            background: Theme.success;
+                        }
+                    }
+                    status-text := Text {
+                        text: "Connected";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-small;
+                        vertical-alignment: center;
+                        accessible-role: text;
+                    }
                 }
-                Text {
-                    text: Math.round(brightness.value) + "%";
-                    color: Theme.text;
-                    font-size: Theme.font-small;
-                    min-width: 36px;
-                    horizontal-alignment: right;
-                    vertical-alignment: center;
+            }
+            Divider { }
+
+            Section {
+                title: "Sensitivity";
+                status: root.dpi-status;
+                status-is-error: root.dpi-status-is-error;
+
+                HorizontalLayout {
+                    alignment: start;
+                    spacing: 6px;
+                    Text {
+                        text: root.separate-xy ? "X " + root.dpi-x + "  Y " + root.dpi-y : root.dpi-x;
+                        color: Theme.text;
+                        font-size: Theme.font-value;
+                        font-weight: 600;
+                        accessible-role: text;
+                    }
+                    Text {
+                        y: 14px;
+                        text: "DPI";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-body;
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 14px;
+                    if root.separate-xy: Text {
+                        text: "X";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-body;
+                        vertical-alignment: center;
+                        min-width: 14px;
+                    }
+                    TuneSlider {
+                        label: root.separate-xy ? "Horizontal DPI" : "DPI";
+                        minimum: 100;
+                        maximum: 6400;
+                        step: 50;
+                        value: root.dpi-x;
+                        epoch: root.epoch;
+                        changed(v) => {
+                            root.dpi-x = v;
+                            if (!root.separate-xy) {
+                                root.dpi-y = v;
+                            }
+                        }
+                        released => {
+                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                        }
+                    }
+                }
+                if root.separate-xy: HorizontalLayout {
+                    spacing: 14px;
+                    Text {
+                        text: "Y";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-body;
+                        vertical-alignment: center;
+                        min-width: 14px;
+                    }
+                    TuneSlider {
+                        label: "Vertical DPI";
+                        minimum: 100;
+                        maximum: 6400;
+                        step: 50;
+                        value: root.dpi-y;
+                        epoch: root.epoch;
+                        changed(v) => {
+                            root.dpi-y = v;
+                        }
+                        released => {
+                            root.apply-dpi(root.dpi-x, root.dpi-y);
+                        }
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 6px;
+                    for preset in root.presets: Chip {
+                        text: preset;
+                        active: root.dpi-x == preset && root.dpi-y == preset;
+                        clicked => {
+                            root.dpi-x = preset;
+                            root.dpi-y = preset;
+                            root.apply-dpi(preset, preset);
+                        }
+                    }
+                }
+
+                Toggle {
+                    text: "Separate X and Y";
+                    checked <=> root.separate-xy;
+                    toggled(on) => {
+                        if (!on && root.dpi-y != root.dpi-x) {
+                            root.dpi-y = root.dpi-x;
+                            root.apply-dpi(root.dpi-x, root.dpi-x);
+                        }
+                    }
+                }
+            }
+            Divider { }
+
+            Section {
+                title: "Polling rate";
+                status: root.polling-status;
+                status-is-error: root.polling-status-is-error;
+
+                Segmented {
+                    label: "Polling rate";
+                    options: ["125 Hz", "500 Hz", "1000 Hz"];
+                    current: root.polling-index;
+                    selected(index) => {
+                        root.apply-polling(index);
+                    }
+                }
+            }
+
+            for led[index] in root.leds: VerticalLayout {
+                Divider { }
+                Section {
+                    title: led.name;
+                    status: led.status;
+                    status-is-error: led.status-is-error;
+
+                    Segmented {
+                        label: led.name + " effect";
+                        options: ["Off", "Static", "Breathe"];
+                        current: led.effect;
+                        selected(effect) => {
+                            root.apply-effect(led.id, effect);
+                        }
+                    }
+                    if led.effect == -1: Text {
+                        text: "The mouse can't report its current effect. Pick one to set it.";
+                        color: Theme.text-muted;
+                        font-size: Theme.font-small;
+                        wrap: word-wrap;
+                    }
+                    HorizontalLayout {
+                        spacing: 14px;
+                        Text {
+                            text: "Brightness";
+                            color: Theme.text-muted;
+                            font-size: Theme.font-body;
+                            vertical-alignment: center;
+                            min-width: 76px;
+                        }
+                        brightness := TuneSlider {
+                            label: led.name + " brightness";
+                            minimum: 0;
+                            maximum: 100;
+                            step: 1;
+                            value: led.brightness;
+                            epoch: root.epoch;
+                            released(v) => {
+                                root.apply-brightness(led.id, Math.round(v));
+                            }
+                        }
+                        Text {
+                            text: Math.round(brightness.shown) + "%";
+                            color: Theme.text;
+                            font-size: Theme.font-body;
+                            min-width: 40px;
+                            horizontal-alignment: right;
+                            vertical-alignment: center;
+                        }
+                    }
                 }
             }
         }
