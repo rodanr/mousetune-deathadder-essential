@@ -26,6 +26,10 @@ pub enum Error {
         /// Number of bytes that was supplied.
         actual: usize,
     },
+
+    /// A DPI value was outside the supported range.
+    #[error("DPI {0} is out of range (100–6400)")]
+    DpiOutOfRange(u16),
 }
 
 /// Convenience alias for results using [`Error`].

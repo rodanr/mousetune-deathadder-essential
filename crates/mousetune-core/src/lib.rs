@@ -5,8 +5,12 @@
 //! so everything here is unit-testable. Protocol knowledge comes from the
 //! OpenRazer project.
 
+pub mod command;
 pub mod error;
 pub mod report;
+pub mod types;
 
+pub use command::Command;
 pub use error::{Error, Result};
 pub use report::Report;
+pub use types::{Brightness, Dpi, DpiPair, Effect, Led, PollingRate};
