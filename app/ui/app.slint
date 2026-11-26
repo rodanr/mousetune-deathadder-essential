@@ -11,6 +11,7 @@ import { Chip } from "components/chip.slint";
 import { Toggle } from "components/toggle.slint";
 import { Banner } from "components/banner.slint";
 import { NumberField } from "components/number-field.slint";
+import { StatusLine } from "components/status-line.slint";
 
 export { Theme }
 
@@ -112,6 +113,9 @@ export component MainWindow inherits Window {
     }
 
     if root.screen == Screen.connected: VerticalLayout {
+        // Pinned to the window: content sizes never resize the layout.
+        width: root.width;
+        height: root.height;
         padding: Theme.page-pad;
         spacing: Theme.gap;
 
@@ -316,22 +320,9 @@ export component MainWindow inherits Window {
                                 vertical-alignment: center;
                             }
                             Rectangle { horizontal-stretch: 1; }
-                            if led.status != "" && !led.status-is-error: Image {
-                                source: @image-url("icons/check.svg");
-                                colorize: Theme.success;
-                                width: 13px;
-                                height: 13px;
-                                y: (parent.height - self.height) / 2;
-                                accessible-role: none;
-                            }
-                            Text {
-                                max-width: 220px;
+                            StatusLine {
                                 text: led.status;
-                                color: led.status-is-error ? Theme.danger : Theme.success;
-                                font-size: Theme.font-small;
-                                horizontal-alignment: right;
-                                vertical-alignment: center;
-                                wrap: word-wrap;
+                                is-error: led.status-is-error;
                             }
                         }
                         Segmented {

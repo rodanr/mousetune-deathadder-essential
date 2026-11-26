@@ -125,7 +125,13 @@ fn main() -> Result<()> {
         present(&ui, state);
         render(&ui, &window, &clock, &out.join(format!("{name}.png")))?;
     }
-    println!("wrote {} snapshots to {}", cases.len(), out.display());
+
+    // Feedback must not move the layout: same screen with "Applied" showing.
+    present(&ui, &cases[0].1);
+    ui.set_dpi_status("Applied".into());
+    render(&ui, &window, &clock, &out.join("connected-applied.png"))?;
+    ui.set_dpi_status("".into());
+    println!("wrote {} snapshots to {}", cases.len() + 1, out.display());
     Ok(())
 }
 
