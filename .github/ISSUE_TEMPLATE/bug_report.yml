@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work with your DeathAdder Essential
+labels: [bug]
+body:
+  - type: dropdown
+    id: model
+    attributes:
+      label: Mouse model
+      options:
+        - DeathAdder Essential (0x006E)
+        - DeathAdder Essential White Edition (0x0071)
+        - DeathAdder Essential 2021 (0x0098)
+        - Other (not supported, please say which)
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and version
+      placeholder: macOS 15.1 (Apple Silicon)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MouseTune version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug log
+      description: |
+        Run from a terminal with `RUST_LOG=mousetune=debug,mousetune_hid=debug` and paste the output.
+        On macOS: `RUST_LOG=mousetune=debug /Applications/MouseTune.app/Contents/MacOS/MouseTune`
+      render: shell

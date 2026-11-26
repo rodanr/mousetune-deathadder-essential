@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol reference
+      description: >
+        Features that talk to the mouse must be backed by documented OpenRazer
+        behaviour. Link the relevant OpenRazer code if you know it.
