@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-26
+
 ### Added
 
 - Control DPI (100 to 6400, separate X/Y), polling rate (125/500/1000 Hz) and
@@ -18,3 +20,6 @@ All notable changes are documented here. The format follows
   one-colour masters and a dedicated small-size cut.
 - macOS universal app bundle, DMG and zip; Windows and Linux archives;
   Homebrew cask in the rodanr/tap tap.
+
+[Unreleased]: https://github.com/rodanr/mousetune-deathadder-essential/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/rodanr/mousetune-deathadder-essential/releases/tag/v0.1.0
