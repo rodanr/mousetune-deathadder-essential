@@ -12,5 +12,7 @@ All notable changes are documented here. The format follows
   logo/scroll LED effect and brightness on the DeathAdder Essential,
   Essential White Edition and Essential (2021).
 - Slint user interface with dark and light themes.
+- Original "dial" app icon (the mouse as the needle of a tuning dial), with
+  one-colour masters and a dedicated small-size cut.
 - macOS universal app bundle, DMG and zip; Windows and Linux archives;
   Homebrew formula for a personal tap.

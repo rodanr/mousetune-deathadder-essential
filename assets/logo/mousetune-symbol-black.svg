@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>MouseTune</title>
+  <path fill="#000000" d="M51.63 216.37 A108 108 0 1 1 204.37 216.37 A12 12 0 0 1 187.40 199.40 A84 84 0 1 0 68.60 199.40 A12 12 0 0 1 51.63 216.37 Z"/>
+  <path fill="#000000" fill-rule="evenodd" transform="rotate(40 128 140)" d="M128 86 a32 32 0 0 1 32 32 v44 a32 32 0 0 1 -64 0 v-44 a32 32 0 0 1 32 -32 Z M123 104 a5 5 0 0 1 10 0 v16 a5 5 0 0 1 -10 0 Z"/>
+</svg>

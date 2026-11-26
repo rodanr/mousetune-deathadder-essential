@@ -11,6 +11,8 @@ use resvg::{tiny_skia, usvg};
 
 /// Sizes bundled into the Windows icon.
 const ICO_SIZES: [u32; 6] = [16, 24, 32, 48, 64, 256];
+/// At and below this size the simplified `icon-small.svg` is used.
+const SMALL_MAX: u32 = 32;
 
 fn main() -> Result<()> {
     match std::env::args().nth(1).as_deref() {
@@ -41,18 +43,23 @@ fn render(tree: &usvg::Tree, size: u32) -> Result<tiny_skia::Pixmap> {
 fn icons() -> Result<()> {
     let root = workspace_root();
     let assets = root.join("assets");
-    let svg = fs::read(assets.join("icon.svg")).context("reading assets/icon.svg")?;
-    let tree = usvg::Tree::from_data(&svg, &usvg::Options::default())?;
+    let load = |name: &str| -> Result<usvg::Tree> {
+        let svg = fs::read(assets.join(name)).with_context(|| format!("reading assets/{name}"))?;
+        Ok(usvg::Tree::from_data(&svg, &usvg::Options::default())?)
+    };
+    let full = load("icon.svg")?;
+    let small = load("icon-small.svg")?;
+    let tree_for = |size: u32| if size <= SMALL_MAX { &small } else { &full };
 
     // PNGs: 1024 for stores/docs, 256 for Linux.
     for size in [1024, 256] {
-        render(&tree, size)?.save_png(assets.join(format!("icon-{size}.png")))?;
+        render(tree_for(size), size)?.save_png(assets.join(format!("icon-{size}.png")))?;
     }
 
     // macOS .icns
     let mut family = icns::IconFamily::new();
     for size in [16, 32, 64, 128, 256, 512, 1024] {
-        let pixmap = render(&tree, size)?;
+        let pixmap = render(tree_for(size), size)?;
         let image =
             icns::Image::from_data(icns::PixelFormat::RGBA, size, size, demultiply(&pixmap))?;
         family.add_icon(&image)?;
@@ -62,7 +69,7 @@ fn icons() -> Result<()> {
     // Windows .ico
     let mut dir = ico::IconDir::new(ico::ResourceType::Icon);
     for size in ICO_SIZES {
-        let pixmap = render(&tree, size)?;
+        let pixmap = render(tree_for(size), size)?;
         let image = ico::IconImage::from_rgba_data(size, size, demultiply(&pixmap));
         dir.add_entry(ico::IconDirEntry::encode(&image)?);
     }
