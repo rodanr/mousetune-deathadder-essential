@@ -7,10 +7,12 @@
 
 pub mod command;
 pub mod error;
+pub mod model;
 pub mod report;
 pub mod types;
 
 pub use command::Command;
 pub use error::{Error, Result};
+pub use model::{Model, VENDOR_ID};
 pub use report::Report;
 pub use types::{Brightness, Dpi, DpiPair, Effect, Led, PollingRate};
