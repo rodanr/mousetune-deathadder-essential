@@ -3,9 +3,9 @@
 ![MouseTune showing DPI, polling rate and lighting settings for a DeathAdder Essential](docs/screenshot.png)
 
 MouseTune is a small, free and open-source app that sets **DPI, polling rate and
-LED lighting** on the Razer DeathAdder Essential without Razer Synapse. Changes are
-written to the mouse, so MouseTune does not need to keep running: open it,
-change what you want, quit.
+LED lighting** on the Razer DeathAdder Essential without Razer Synapse. Settings are
+stored on the mouse itself and survive unplugging, so MouseTune does not need
+to keep running: open it, change what you want, quit.
 
 **macOS is the primary platform** and the one this project is developed on.
 Windows and Linux builds are produced by CI and are community-tested.
@@ -108,8 +108,6 @@ Set `RUST_LOG=mousetune=debug` for detailed logs. The project layout:
   does this well.
 - The mouse cannot report its current lighting effect, so MouseTune shows the
   last effect you chose (remembered per mouse), or nothing until you pick one.
-- Whether DPI and polling rate survive unplugging depends on the mouse firmware.
-  If they reset, reopen MouseTune after reconnecting.
 
 ## Credits
 
