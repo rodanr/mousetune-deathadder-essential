@@ -151,6 +151,18 @@ impl Discovery {
         }
     }
 
+    /// Returns `true` while a device of `model` is still enumerated.
+    ///
+    /// Used to detect an unplug without sending any traffic to the mouse.
+    pub fn is_present(&mut self, model: Model) -> bool {
+        if let Err(error) = self.api.refresh_devices() {
+            tracing::warn!(%error, "failed to refresh HID device list");
+        }
+        self.api
+            .device_list()
+            .any(|info| info.vendor_id() == VENDOR_ID && info.product_id() == model.product_id())
+    }
+
     fn try_open(&self, candidate: &Candidate) -> Result<Connected, ConnectError> {
         let hid = self
             .api
