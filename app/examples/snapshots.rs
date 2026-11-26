@@ -24,8 +24,9 @@ use slint::{ComponentHandle, LogicalSize, PhysicalSize, PlatformError};
 const WIDTH: f32 = 460.0;
 /// Render at 2x like a Retina display.
 const SCALE: f32 = 2.0;
-/// Banner screens are short; give them a realistic window height.
-const MIN_HEIGHT: f32 = 380.0;
+/// The window's default height (`preferred-height` in app.slint): render at
+/// least this tall so layout stretching shows up exactly as in the app.
+const MIN_HEIGHT: f32 = 720.0;
 
 /// Offscreen platform with a manual clock, so animations can be finished
 /// before a frame is captured.

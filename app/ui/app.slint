@@ -106,6 +106,8 @@ export component MainWindow inherits Window {
         }
 
         if root.screen == Screen.connected: VerticalLayout {
+            // Pack sections to the top; a tall window must not stretch them apart.
+            alignment: start;
             padding: Theme.page-pad;
             padding-bottom: Theme.page-pad - Theme.section-pad;
 

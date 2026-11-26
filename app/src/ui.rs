@@ -39,6 +39,13 @@ const STATUS_LIFETIME: Duration = Duration::from_millis(1800);
 pub fn run(
     start: impl FnOnce(Box<dyn Fn(Event) + Send>) -> anyhow::Result<WorkerHandle>,
 ) -> anyhow::Result<()> {
+    // Slint creates transparent winit windows by default; on recent macOS
+    // the system title bar of a transparent window shows the desktop behind
+    // it. MouseTune never needs transparency, so ask for an opaque window.
+    slint::BackendSelector::new()
+        .with_winit_window_attributes_hook(|attributes| attributes.with_transparent(false))
+        .select()?;
+
     let window = MainWindow::new()?;
 
     let weak = window.as_weak();
