@@ -1,28 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { Theme } from "../theme.slint";
 
-/// One-line feedback ("Applied" or an error) with a fixed footprint: it only
-/// fades in and out, so showing it never moves the layout around it.
+/// One-line feedback ("Applied" or an error). It takes the leftover width of
+/// its row and its size never depends on the message, so showing or hiding
+/// feedback never moves the layout; it only fades in and out.
 export component StatusLine inherits HorizontalLayout {
     in property <string> text;
     in property <bool> is-error;
 
-    width: 220px;
+    horizontal-stretch: 1;
+    min-width: 0px;
     height: 16px;
     spacing: 6px;
-    alignment: end;
 
-    Image {
-        source: @image-url("../icons/check.svg");
-        colorize: Theme.success;
-        width: 13px;
-        height: 13px;
-        y: (parent.height - self.height) / 2;
-        opacity: root.text != "" && !root.is-error ? 1 : 0;
-        animate opacity { duration: 180ms; easing: ease-out; }
-        accessible-role: none;
-    }
     Text {
+        horizontal-stretch: 1;
+        min-width: 0px;
+        preferred-width: 0px;
         text: root.text;
         color: root.is-error ? Theme.danger : Theme.success;
         font-size: Theme.font-small;
@@ -32,5 +26,15 @@ export component StatusLine inherits HorizontalLayout {
         opacity: root.text != "" ? 1 : 0;
         animate opacity { duration: 180ms; easing: ease-out; }
         accessible-role: AccessibleRole.text;
+    }
+    Image {
+        source: @image-url("../icons/check.svg");
+        colorize: Theme.success;
+        width: 13px;
+        height: 13px;
+        y: (parent.height - self.height) / 2;
+        opacity: root.text != "" && !root.is-error ? 1 : 0;
+        animate opacity { duration: 180ms; easing: ease-out; }
+        accessible-role: none;
     }
 }

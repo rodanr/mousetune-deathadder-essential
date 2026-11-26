@@ -2,8 +2,8 @@
 import { Theme } from "../theme.slint";
 import { StatusLine } from "status-line.slint";
 
-/// A HUD panel (two cut corners) with a tracked title, an optional status on the
-/// right and an accent bracket on the cut corner.
+/// A HUD panel (two cut corners) with an accent-marked title and an optional
+/// status on the right.
 export component HudPanel inherits Rectangle {
     in property <string> title;
     in property <string> status;
@@ -18,28 +18,22 @@ export component HudPanel inherits Rectangle {
     border-top-right-radius: Theme.radius;
     border-bottom-left-radius: Theme.radius;
 
-    // Accent bracket on the top-left corner.
-    Rectangle {
-        x: Theme.chamfer;
-        y: 0;
-        width: 18px;
-        height: 2px;
-        background: Theme.accent;
-    }
-    Rectangle {
-        x: 0;
-        y: Theme.chamfer;
-        width: 2px;
-        height: 18px;
-        background: Theme.accent;
-    }
-
     VerticalLayout {
         padding: Theme.panel-pad;
         spacing: Theme.gap;
 
         HorizontalLayout {
             spacing: 8px;
+            // Accent marker, aligned with the title.
+            Rectangle {
+                width: 3px;
+                Rectangle {
+                    width: 3px;
+                    height: 12px;
+                    border-radius: 1px;
+                    background: Theme.accent;
+                }
+            }
             Text {
                 text: root.title;
                 color: Theme.text-muted;
@@ -50,7 +44,6 @@ export component HudPanel inherits Rectangle {
                 vertical-alignment: center;
                 accessible-role: text;
             }
-            Rectangle { horizontal-stretch: 1; }
             StatusLine {
                 text: root.status;
                 is-error: root.status-is-error;
