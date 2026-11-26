@@ -1,1 +1,3 @@
 doc-valid-idents = ["DeathAdder", "OpenRazer", "MouseTune", "macOS", "IOKit", "Slint", ".."]
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
