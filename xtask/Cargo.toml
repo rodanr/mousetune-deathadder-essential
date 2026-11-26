@@ -9,7 +9,7 @@ publish.workspace = true
 
 [dependencies]
 anyhow = "1"
-icns = "0.3"
+icns = "0.4"
 ico = "0.4"
 resvg = "0.50"
 
