@@ -32,6 +32,8 @@ fn map_message(message: &str) -> TransportError {
         TransportError::PermissionDenied
     } else if lower.contains(IOKIT_EXCLUSIVE_ACCESS) || lower.contains("exclusive access") {
         TransportError::InUse
+    } else if lower.contains("disconnected") {
+        TransportError::Disconnected
     } else if lower.contains("permission denied") || lower.contains("access is denied") {
         TransportError::PermissionDenied
     } else {
@@ -63,6 +65,14 @@ mod tests {
             "failed to open IOHIDDevice: (0xE00002C5) (iokit/common) exclusive access and device already open",
         );
         assert_eq!(map_hid_error(&error), TransportError::InUse);
+    }
+
+    #[test]
+    fn unplugged_device_maps_to_disconnected() {
+        assert_eq!(
+            map_hid_error(&api("Device is disconnected")),
+            TransportError::Disconnected
+        );
     }
 
     #[test]
