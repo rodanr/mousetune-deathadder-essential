@@ -1,0 +1,14 @@
+# Build output
+/target
+/dist
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local tooling
+.claude/
+graphify-out/
+.codegraph/
