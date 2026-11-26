@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  # Manual run: builds every artifact but publishes nothing (a dry run).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    name: Check version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          version="$(grep -m1 '^version' Cargo.toml | sed 's/.*"\(.*\)"/\1/')"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if [[ "${GITHUB_REF}" == refs/tags/v* && "${GITHUB_REF_NAME}" != "v${version}" ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match Cargo.toml version ${version}"
+            exit 1
+          fi
+
+  macos:
+    name: macOS (universal)
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - run: ./scripts/bundle-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+
+  windows:
+    name: Windows (x64)
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --locked --package mousetune
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "MouseTune-${{ needs.version.outputs.version }}-windows-x64"
+          New-Item -ItemType Directory -Force -Path dist, "stage/$name" | Out-Null
+          Copy-Item target/release/mousetune.exe "stage/$name/MouseTune.exe"
+          Copy-Item LICENSE, README.md "stage/$name/" -ErrorAction SilentlyContinue
+          Compress-Archive -Path "stage/$name" -DestinationPath "dist/$name.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*.zip
+          if-no-files-found: error
+
+  linux:
+    name: Linux (x86_64)
+    needs: version
+    # Older Ubuntu keeps the glibc requirement low so the binary runs on more distros.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-dev
+      - run: cargo build --release --locked --package mousetune
+      - name: Package
+        run: |
+          name="mousetune-${{ needs.version.outputs.version }}-linux-x86_64"
+          mkdir -p "dist" "stage/${name}"
+          cp target/release/mousetune "stage/${name}/mousetune"
+          cp packaging/linux/70-mousetune.rules packaging/linux/mousetune.desktop packaging/linux/INSTALL.txt "stage/${name}/"
+          cp assets/icon-256.png "stage/${name}/mousetune.png"
+          cp LICENSE "stage/${name}/"
+          tar -C stage -czf "dist/${name}.tar.gz" "${name}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    # Only for real tags; manual runs stop after building the artifacts.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, macos, windows, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Checksums
+        working-directory: artifacts
+        run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" artifacts/* \
+            --title "MouseTune ${GITHUB_REF_NAME}" \
+            --generate-notes
+      - name: Source tarball checksum (for the Homebrew formula)
+        run: |
+          curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz" | sha256sum

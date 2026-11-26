@@ -1,0 +1,22 @@
+MouseTune for DeathAdder Essential - Linux install
+==================================================
+
+1. Allow your user to access the mouse (one time, needs root):
+
+     sudo cp 70-mousetune.rules /etc/udev/rules.d/
+     sudo udevadm control --reload-rules && sudo udevadm trigger
+
+   Then unplug and replug the mouse.
+
+2. Run it:
+
+     ./mousetune
+
+   Optional desktop integration:
+
+     install -Dm755 mousetune ~/.local/bin/mousetune
+     install -Dm644 mousetune.desktop ~/.local/share/applications/mousetune.desktop
+     install -Dm644 mousetune.png ~/.local/share/icons/hicolor/256x256/apps/mousetune.png
+
+If the OpenRazer kernel driver is loaded it may own the mouse; MouseTune will
+then report that the device is in use.
