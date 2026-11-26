@@ -58,7 +58,9 @@ fn icons() -> Result<()> {
 
     // macOS .icns
     let mut family = icns::IconFamily::new();
-    for size in [16, 32, 64, 128, 256, 512, 1024] {
+    // Apple's standard icon sizes. 64 px is not one of them: the icns crate
+    // stores it as `icp6`, which macOS reads as a 48 px slot and cannot decode.
+    for size in [16, 32, 128, 256, 512, 1024] {
         let pixmap = render(tree_for(size), size)?;
         let image =
             icns::Image::from_data(icns::PixelFormat::RGBA, size, size, demultiply(&pixmap))?;
