@@ -16,7 +16,8 @@ use tracing_subscriber::EnvFilter;
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| "mousetune=info".into()),
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "mousetune=info,mousetune_hid=info".into()),
         )
         .init();
 

@@ -204,6 +204,11 @@ impl<F: Fn(Event)> Worker<F> {
                 if lost {
                     self.active = None;
                     self.show(AppState::Searching);
+                } else {
+                    // The UI already shows the value the user picked; send the
+                    // unchanged device state again so it snaps back.
+                    let state = AppState::Connected(active.state.clone());
+                    (self.emit)(Event::State(state));
                 }
             }
         }
