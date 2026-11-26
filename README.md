@@ -42,13 +42,31 @@ Windows and Linux builds are produced by CI and are community-tested.
 from the [latest release](../../releases/latest), open it and drag MouseTune to
 Applications. The same release has a `.zip` with the app inside.
 
-MouseTune is signed ad hoc, not with a paid Apple Developer ID, so the first
-launch needs one extra step:
+#### First launch: allow the app (one time)
+
+MouseTune is signed ad hoc, not with a paid Apple Developer ID, so macOS
+blocks the downloaded app the first time. Pick **one** of these:
+
+**Option A: System Settings**
 
 1. Open MouseTune. macOS says it cannot verify the app. Click **Done**.
 2. Open **System Settings → Privacy & Security**, scroll down and click
    **Open Anyway** next to "MouseTune was blocked".
-3. Confirm with your password and open the app again.
+3. Confirm with your password, then click **Open** when asked again.
+
+**Option B: Terminal**
+
+After moving MouseTune to Applications, remove the download quarantine flag
+and open it:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/MouseTune.app
+open /Applications/MouseTune.app
+```
+
+Only do this for apps you trust and downloaded from this repository's
+releases. You don't need either step when installing with Homebrew, because
+Homebrew builds the app on your Mac.
 
 **Homebrew** (builds from source, needs a Rust toolchain, which Homebrew installs):
 

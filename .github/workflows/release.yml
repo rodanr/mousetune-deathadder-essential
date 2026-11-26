@@ -121,8 +121,25 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          cat > notes.md <<'EOF'
+          **Downloads:** macOS (universal `.dmg` or `.zip`), Windows (`.zip`), Linux (`.tar.gz` with udev rule). Full install steps are in the README.
+
+          **macOS first launch.** The app is not signed with a paid Apple Developer ID, so macOS blocks it once. Either open **System Settings → Privacy & Security** and click **Open Anyway** next to "MouseTune was blocked", or run this in Terminal after moving the app to Applications:
+
+          ```sh
+          xattr -dr com.apple.quarantine /Applications/MouseTune.app
+          open /Applications/MouseTune.app
+          ```
+
+          Then allow **Input Monitoring** when MouseTune asks (System Settings → Privacy & Security → Input Monitoring).
+
+          **Windows:** SmartScreen may warn about the unsigned app: click **More info → Run anyway**.
+
+          _MouseTune is an independent open-source project and is not affiliated with or endorsed by Razer Inc. Razer and DeathAdder are trademarks of Razer Inc._
+          EOF
           gh release create "${GITHUB_REF_NAME}" artifacts/* \
             --title "MouseTune ${GITHUB_REF_NAME}" \
+            --notes-file notes.md \
             --generate-notes
       - name: Source tarball checksum (for the Homebrew formula)
         run: |
