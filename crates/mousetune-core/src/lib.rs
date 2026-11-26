@@ -5,6 +5,8 @@
 //! so everything here is unit-testable. Protocol knowledge comes from the
 //! OpenRazer project.
 
+#![forbid(unsafe_code)]
+
 pub mod command;
 pub mod device;
 pub mod error;

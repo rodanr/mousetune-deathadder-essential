@@ -5,9 +5,13 @@
 //! hidapi; this crate only adapts it to [`mousetune_core::HidTransport`] and
 //! decides which of the mouse's HID interfaces to talk to.
 
+mod access;
 mod discovery;
 mod error_map;
 mod transport;
 
+pub use access::{
+    INPUT_MONITORING_SETTINGS_URL, InputAccess, input_monitoring_access, request_input_monitoring,
+};
 pub use discovery::{ConnectError, Connected, Connection, Discovery};
 pub use transport::HidapiTransport;
