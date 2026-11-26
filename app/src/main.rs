@@ -4,13 +4,8 @@
 // Release builds on Windows are GUI apps: no console window.
 #![cfg_attr(all(not(debug_assertions), windows), windows_subsystem = "windows")]
 
-mod device_ops;
-mod prefs;
-mod state;
-mod ui;
-mod worker;
-
 use anyhow::Result;
+use mousetune::{prefs::Prefs, ui, worker};
 use tracing_subscriber::EnvFilter;
 
 fn main() -> Result<()> {
@@ -21,5 +16,5 @@ fn main() -> Result<()> {
         )
         .init();
 
-    ui::run(|sink| worker::spawn(prefs::Prefs::load_default(), sink))
+    ui::run(|sink| worker::spawn(Prefs::load_default(), sink))
 }
