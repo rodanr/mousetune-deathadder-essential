@@ -6,13 +6,17 @@
 //! OpenRazer project.
 
 pub mod command;
+pub mod device;
 pub mod error;
 pub mod model;
 pub mod report;
+pub mod transport;
 pub mod types;
 
 pub use command::Command;
+pub use device::RazerDevice;
 pub use error::{Error, Result};
 pub use model::{Model, VENDOR_ID};
 pub use report::Report;
+pub use transport::{HidTransport, TransportError};
 pub use types::{Brightness, Dpi, DpiPair, Effect, Led, PollingRate};
