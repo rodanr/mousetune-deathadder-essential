@@ -33,6 +33,8 @@ lipo -create \
   -output "${app}/Contents/MacOS/MouseTune"
 sed "s/@VERSION@/${version}/g" packaging/macos/Info.plist > "${app}/Contents/Info.plist"
 cp assets/AppIcon.icns "${app}/Contents/Resources/AppIcon.icns"
+# Shown by the native About window (MouseTune > About MouseTune).
+cp packaging/macos/Credits.rtf "${app}/Contents/Resources/Credits.rtf"
 
 echo "==> Ad-hoc signing"
 codesign --force --deep --sign - "${app}"

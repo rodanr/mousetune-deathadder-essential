@@ -17,6 +17,6 @@
   <key>NSInputMonitoringUsageDescription</key>
   <string>MouseTune needs Input Monitoring access to read and change your mouse's DPI, polling rate and lighting.</string>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © MouseTune contributors. GPL-3.0-or-later.</string>
+  <string>© 2026 MouseTune contributors · GPL-3.0-or-later</string>
 </dict>
 </plist>
