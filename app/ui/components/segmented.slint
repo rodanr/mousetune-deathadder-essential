@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// A row of mutually exclusive options. `current` is -1 when none is known.
+export component Segmented inherits Rectangle {
+    in property <[string]> options;
+    in property <int> current: -1;
+    in property <bool> enabled: true;
+    in property <string> label;
+    callback selected(int);
+
+    height: Theme.control-height;
+    background: Theme.surface-raised;
+    border-radius: Theme.radius-control;
+    border-width: 1px;
+    border-color: Theme.border;
+    opacity: root.enabled ? 1 : 0.4;
+    accessible-role: tab-list;
+    accessible-label: root.label;
+
+    HorizontalLayout {
+        padding: 3px;
+        spacing: 3px;
+        for option[index] in root.options: Rectangle {
+            property <bool> active: index == root.current;
+            border-radius: Theme.radius-control - 2px;
+            background: self.active ? Theme.accent : (touch.has-hover ? Theme.border : transparent);
+            border-width: scope.has-focus ? 2px : 0px;
+            border-color: Theme.text;
+            accessible-role: tab;
+            accessible-label: option;
+            accessible-checkable: true;
+            accessible-checked: self.active;
+            accessible-action-default => { root.selected(index); }
+
+            Text {
+                text: option;
+                color: parent.active ? Theme.on-accent : Theme.text;
+                font-size: Theme.font-body;
+                font-weight: parent.active ? 700 : 400;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            scope := FocusScope {
+                enabled: root.enabled;
+                key-pressed(event) => {
+                    if (event.text == " " || event.text == "\n") {
+                        root.selected(index);
+                        return accept;
+                    }
+                    return reject;
+                }
+            }
+            touch := TouchArea {
+                enabled: root.enabled;
+                mouse-cursor: pointer;
+                clicked => {
+                    scope.focus();
+                    root.selected(index);
+                }
+            }
+        }
+    }
+}

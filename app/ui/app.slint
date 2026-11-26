@@ -1,0 +1,252 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "theme.slint";
+import { Card } from "components/card.slint";
+import { TuneSlider } from "components/tune-slider.slint";
+import { Segmented } from "components/segmented.slint";
+import { Chip } from "components/chip.slint";
+import { Toggle } from "components/toggle.slint";
+import { Banner } from "components/banner.slint";
+
+/// Which screen the window shows.
+export enum Screen { searching, unsupported, permission, busy, error, connected }
+
+/// One LED card. `effect` is -1 while the effect is unknown.
+export struct LedData {
+    id: int,
+    name: string,
+    effect: int,
+    brightness: int,
+    status: string,
+    status-is-error: bool,
+}
+
+export component MainWindow inherits Window {
+    title: "MouseTune for DeathAdder Essential";
+    background: Theme.window;
+    min-width: 440px;
+    preferred-width: 500px;
+    min-height: 420px;
+    default-font-family: "Inter";
+
+    in property <Screen> screen: Screen.searching;
+    in property <string> message;
+    in property <string> model-name;
+    in property <string> firmware;
+    in property <string> serial;
+    in-out property <int> dpi-x: 800;
+    in-out property <int> dpi-y: 800;
+    in-out property <bool> separate-xy: false;
+    in property <string> dpi-status;
+    in property <bool> dpi-status-is-error;
+    in property <int> polling-index: -1;
+    in property <string> polling-status;
+    in property <bool> polling-status-is-error;
+    in property <[LedData]> leds;
+
+    callback apply-dpi(int, int);
+    callback apply-polling(int);
+    callback apply-effect(int, int);
+    callback apply-brightness(int, int);
+    callback open-settings();
+    callback request-access();
+
+    private property <[int]> presets: [400, 800, 1600, 3200, 6400];
+
+    if root.screen == Screen.searching: Banner {
+        title: "Connect your DeathAdder Essential";
+        body: "Plug the mouse in. MouseTune detects it automatically.";
+    }
+    if root.screen == Screen.unsupported: Banner {
+        attention: true;
+        title: "This mouse isn't supported";
+        body: "MouseTune works with the DeathAdder Essential only.";
+    }
+    if root.screen == Screen.permission: Banner {
+        attention: true;
+        title: "Allow Input Monitoring";
+        body: "macOS needs your permission before MouseTune can talk to the mouse.\n\nOpen System Settings → Privacy & Security → Input Monitoring, switch MouseTune on, then reopen the app.";
+        action: "Open System Settings";
+        activated => {
+            root.request-access();
+            root.open-settings();
+        }
+    }
+    if root.screen == Screen.busy: Banner {
+        attention: true;
+        title: "Another app is using the mouse";
+        body: "Quit Razer Synapse or any other mouse utility, then unplug and replug the mouse.";
+    }
+    if root.screen == Screen.error: Banner {
+        attention: true;
+        title: "Something went wrong";
+        body: root.message;
+    }
+
+    if root.screen == Screen.connected: VerticalLayout {
+        padding: 20px;
+        spacing: Theme.gap;
+
+        // Header
+        HorizontalLayout {
+            spacing: 10px;
+            VerticalLayout {
+                spacing: 2px;
+                Text {
+                    text: root.model-name;
+                    color: Theme.text;
+                    font-size: Theme.font-title;
+                    font-weight: 700;
+                    accessible-role: text;
+                }
+                Text {
+                    text: "Firmware " + root.firmware + "  ·  " + root.serial;
+                    color: Theme.text-muted;
+                    font-size: Theme.font-small;
+                }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            HorizontalLayout {
+                spacing: 6px;
+                alignment: end;
+                Rectangle {
+                    y: (parent.height - self.height) / 2;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 4px;
+                    background: Theme.success;
+                }
+                Text {
+                    text: "Connected";
+                    color: Theme.text-muted;
+                    font-size: Theme.font-small;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        // DPI
+        Card {
+            title: "SENSITIVITY";
+            status: root.dpi-status;
+            status-is-error: root.dpi-status-is-error;
+
+            HorizontalLayout {
+                alignment: start;
+                spacing: 8px;
+                Text {
+                    text: root.separate-xy ? "X " + root.dpi-x + "   Y " + root.dpi-y : root.dpi-x;
+                    color: Theme.text;
+                    font-size: Theme.font-display;
+                    font-weight: 700;
+                    vertical-alignment: bottom;
+                    accessible-role: text;
+                }
+                Text {
+                    text: "DPI";
+                    color: Theme.text-muted;
+                    font-size: Theme.font-body;
+                    vertical-alignment: bottom;
+                }
+            }
+
+            TuneSlider {
+                label: root.separate-xy ? "Horizontal DPI" : "DPI";
+                minimum: 100;
+                maximum: 6400;
+                step: 50;
+                value: root.dpi-x;
+                changed(v) => {
+                    root.dpi-x = Math.round(v);
+                    if (!root.separate-xy) { root.dpi-y = Math.round(v); }
+                }
+                released(v) => { root.apply-dpi(root.dpi-x, root.dpi-y); }
+            }
+            if root.separate-xy: TuneSlider {
+                label: "Vertical DPI";
+                minimum: 100;
+                maximum: 6400;
+                step: 50;
+                value: root.dpi-y;
+                changed(v) => { root.dpi-y = Math.round(v); }
+                released(v) => { root.apply-dpi(root.dpi-x, root.dpi-y); }
+            }
+
+            HorizontalLayout {
+                spacing: 6px;
+                for preset in root.presets: Chip {
+                    text: preset;
+                    active: root.dpi-x == preset && root.dpi-y == preset;
+                    clicked => {
+                        root.dpi-x = preset;
+                        root.dpi-y = preset;
+                        root.apply-dpi(preset, preset);
+                    }
+                }
+            }
+
+            Toggle {
+                text: "Separate X / Y";
+                checked <=> root.separate-xy;
+                toggled(on) => {
+                    if (!on) {
+                        root.dpi-y = root.dpi-x;
+                        root.apply-dpi(root.dpi-x, root.dpi-x);
+                    }
+                }
+            }
+        }
+
+        // Polling rate
+        Card {
+            title: "POLLING RATE";
+            status: root.polling-status;
+            status-is-error: root.polling-status-is-error;
+
+            Segmented {
+                label: "Polling rate";
+                options: ["125 Hz", "500 Hz", "1000 Hz"];
+                current: root.polling-index;
+                selected(index) => { root.apply-polling(index); }
+            }
+        }
+
+        // Lighting
+        for led in root.leds: Card {
+            title: "LIGHTING · " + led.name;
+            status: led.status;
+            status-is-error: led.status-is-error;
+
+            Segmented {
+                label: led.name + " effect";
+                options: ["Off", "Static", "Breathe"];
+                current: led.effect;
+                selected(index) => { root.apply-effect(led.id, index); }
+            }
+            HorizontalLayout {
+                spacing: 12px;
+                Text {
+                    text: "Brightness";
+                    color: Theme.text-muted;
+                    font-size: Theme.font-small;
+                    vertical-alignment: center;
+                }
+                brightness := TuneSlider {
+                    label: led.name + " brightness";
+                    minimum: 0;
+                    maximum: 100;
+                    step: 1;
+                    value: led.brightness;
+                    released(v) => { root.apply-brightness(led.id, Math.round(v)); }
+                }
+                Text {
+                    text: Math.round(brightness.value) + "%";
+                    color: Theme.text;
+                    font-size: Theme.font-small;
+                    min-width: 36px;
+                    horizontal-alignment: right;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}

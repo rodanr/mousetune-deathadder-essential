@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// A compact preset button.
+export component Chip inherits Rectangle {
+    in property <string> text;
+    in property <bool> active;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    height: 30px;
+    horizontal-stretch: 1;
+    border-radius: Theme.radius-control;
+    background: root.active ? Theme.accent : (touch.has-hover ? Theme.border : Theme.surface-raised);
+    border-width: scope.has-focus ? 2px : 1px;
+    border-color: scope.has-focus ? Theme.text : Theme.border;
+    opacity: root.enabled ? 1 : 0.4;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-action-default => { root.clicked(); }
+
+    Text {
+        text: root.text;
+        color: root.active ? Theme.on-accent : Theme.text;
+        font-size: Theme.font-small;
+        font-weight: root.active ? 700 : 400;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    scope := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (event.text == " " || event.text == "\n") {
+                root.clicked();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            scope.focus();
+            root.clicked();
+        }
+    }
+}

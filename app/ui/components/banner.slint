@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// Full-window message for the "no mouse / needs attention" states, with one
+/// optional primary action.
+export component Banner inherits Rectangle {
+    in property <string> title;
+    in property <string> body;
+    in property <string> action;
+    in property <bool> attention;
+    callback activated();
+
+    VerticalLayout {
+        alignment: center;
+        spacing: 14px;
+        padding: 32px;
+
+        Rectangle {
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            border-width: 3px;
+            border-color: root.attention ? Theme.danger : Theme.accent;
+            background: transparent;
+        }
+        Text {
+            text: root.title;
+            color: Theme.text;
+            font-size: Theme.font-title;
+            font-weight: 700;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+            accessible-role: text;
+        }
+        Text {
+            text: root.body;
+            color: Theme.text-muted;
+            font-size: Theme.font-body;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+        }
+        if root.action != "": Rectangle {
+            height: Theme.control-height;
+            border-radius: Theme.radius-control;
+            background: Theme.accent;
+            border-width: scope.has-focus ? 2px : 0px;
+            border-color: Theme.text;
+            accessible-role: button;
+            accessible-label: root.action;
+            accessible-action-default => { root.activated(); }
+            Text {
+                text: root.action;
+                color: Theme.on-accent;
+                font-size: Theme.font-body;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            scope := FocusScope {
+                key-pressed(event) => {
+                    if (event.text == " " || event.text == "\n") {
+                        root.activated();
+                        return accept;
+                    }
+                    return reject;
+                }
+            }
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    scope.focus();
+                    root.activated();
+                }
+            }
+        }
+    }
+}

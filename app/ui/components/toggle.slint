@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// A labelled on/off switch.
+export component Toggle inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> checked;
+    callback toggled(bool);
+
+    height: 28px;
+    accessible-role: switch;
+    accessible-label: root.text;
+    accessible-checkable: true;
+    accessible-checked: root.checked;
+    accessible-action-default => { root.flip(); }
+
+    function flip() {
+        root.checked = !root.checked;
+        root.toggled(root.checked);
+    }
+
+    HorizontalLayout {
+        spacing: 10px;
+        Rectangle {
+            width: 38px;
+            height: 22px;
+            y: (parent.height - self.height) / 2;
+            border-radius: 11px;
+            background: root.checked ? Theme.accent : Theme.surface-raised;
+            border-width: scope.has-focus ? 2px : 1px;
+            border-color: scope.has-focus ? Theme.text : Theme.border;
+            Rectangle {
+                x: root.checked ? parent.width - self.width - 3px : 3px;
+                y: 3px;
+                width: 16px;
+                height: 16px;
+                border-radius: 8px;
+                background: root.checked ? Theme.on-accent : Theme.text-muted;
+                animate x { duration: 120ms; easing: ease-out; }
+            }
+        }
+        Text {
+            text: root.text;
+            color: Theme.text;
+            font-size: Theme.font-body;
+            vertical-alignment: center;
+        }
+    }
+
+    scope := FocusScope {
+        key-pressed(event) => {
+            if (event.text == " " || event.text == "\n") {
+                root.flip();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            scope.focus();
+            root.flip();
+        }
+    }
+}

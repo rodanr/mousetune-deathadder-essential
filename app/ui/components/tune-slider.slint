@@ -1,0 +1,110 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+
+/// Horizontal slider. `changed` fires while dragging; `released` fires once
+/// when the user lets go (or after a keyboard step) and is where the value
+/// should be sent to the mouse.
+export component TuneSlider inherits Rectangle {
+    in property <float> minimum: 0;
+    in property <float> maximum: 100;
+    in property <float> step: 1;
+    in property <bool> enabled: true;
+    in property <string> label;
+    in-out property <float> value;
+    callback changed(float);
+    callback released(float);
+
+    private property <length> handle-size: 20px;
+    private property <float> fraction: (root.value - root.minimum) / (root.maximum - root.minimum);
+
+    height: 28px;
+    opacity: root.enabled ? 1 : 0.4;
+    forward-focus: focus;
+    accessible-role: slider;
+    accessible-label: root.label;
+    accessible-value: root.value;
+    accessible-value-minimum: root.minimum;
+    accessible-value-maximum: root.maximum;
+    accessible-value-step: root.step;
+
+    function snap(raw: float) -> float {
+        return Math.clamp(Math.round(raw / root.step) * root.step, root.minimum, root.maximum);
+    }
+
+    function nudge(direction: float) {
+        root.value = root.snap(root.value + direction * root.step);
+        root.changed(root.value);
+        root.released(root.value);
+    }
+
+    // Track
+    Rectangle {
+        y: (parent.height - self.height) / 2;
+        height: 6px;
+        border-radius: 3px;
+        background: Theme.surface-raised;
+        border-width: 1px;
+        border-color: Theme.border;
+    }
+    // Filled part
+    Rectangle {
+        x: 0;
+        y: (parent.height - self.height) / 2;
+        height: 6px;
+        width: root.fraction * (parent.width - root.handle-size) + root.handle-size / 2;
+        border-radius: 3px;
+        background: Theme.accent;
+    }
+    // Handle
+    Rectangle {
+        x: root.fraction * (parent.width - root.handle-size);
+        y: (parent.height - self.height) / 2;
+        width: root.handle-size;
+        height: root.handle-size;
+        border-radius: root.handle-size / 2;
+        background: Theme.dark ? #ffffff : Theme.surface;
+        border-width: focus.has-focus ? 3px : 2px;
+        border-color: Theme.accent;
+    }
+
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (event.text == Key.LeftArrow || event.text == Key.DownArrow) {
+                root.nudge(-1);
+                return accept;
+            }
+            if (event.text == Key.RightArrow || event.text == Key.UpArrow) {
+                root.nudge(1);
+                return accept;
+            }
+            return reject;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        function update-from-pointer() {
+            let usable = self.width - root.handle-size;
+            let raw = root.minimum + (self.mouse-x - root.handle-size / 2) / usable * (root.maximum - root.minimum);
+            root.value = root.snap(raw);
+            root.changed(root.value);
+        }
+        pointer-event(event) => {
+            if (event.button == PointerEventButton.left) {
+                if (event.kind == PointerEventKind.down) {
+                    focus.focus();
+                    self.update-from-pointer();
+                } else if (event.kind == PointerEventKind.up) {
+                    root.released(root.value);
+                }
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                self.update-from-pointer();
+            }
+        }
+    }
+}
