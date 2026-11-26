@@ -5,7 +5,7 @@
 # livecheck; this copy is the source of truth for everything else.
 cask "mousetune" do
   version "0.1.0"
-  sha256 :no_check # replaced with the DMG's SHA-256 (from SHA256SUMS.txt) when published
+  sha256 "cc2470204dcdbcbf50d54ab57105181bbdc513adbb01bda2273751ce849b51d4"
 
   url "https://github.com/rodanr/mousetune-deathadder-essential/releases/download/v#{version}/MouseTune-#{version}-macos-universal.dmg"
   name "MouseTune"
@@ -17,7 +17,7 @@ cask "mousetune" do
     strategy :github_latest
   end
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "MouseTune.app"
 
