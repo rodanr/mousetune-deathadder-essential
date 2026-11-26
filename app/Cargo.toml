@@ -14,6 +14,7 @@ mousetune-core = { path = "../crates/mousetune-core" }
 mousetune-hid = { path = "../crates/mousetune-hid" }
 anyhow = "1"
 directories = "6"
+open = "5"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # `unstable-winit-030` exposes the window-attributes hook used to make the

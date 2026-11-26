@@ -132,7 +132,11 @@ fn main() -> Result<()> {
     ui.set_dpi_status("Applied".into());
     render(&ui, &window, &clock, &out.join("connected-applied.png"))?;
     ui.set_dpi_status("".into());
-    println!("wrote {} snapshots to {}", cases.len() + 1, out.display());
+
+    ui.set_about_open(true);
+    render(&ui, &window, &clock, &out.join("about.png"))?;
+    ui.set_about_open(false);
+    println!("wrote {} snapshots to {}", cases.len() + 2, out.display());
     Ok(())
 }
 

@@ -12,6 +12,7 @@ import { Toggle } from "components/toggle.slint";
 import { Banner } from "components/banner.slint";
 import { NumberField } from "components/number-field.slint";
 import { StatusLine } from "components/status-line.slint";
+import { AboutOverlay } from "components/about.slint";
 
 export { Theme }
 
@@ -61,6 +62,9 @@ export component MainWindow inherits Window {
     callback apply-brightness(int, int);
     callback open-settings();
     callback request-access();
+    callback open-project();
+    /// Whether the About panel is showing.
+    in-out property <bool> about-open: false;
 
     private property <[float]> presets: [400, 800, 1600, 3200, 6400];
     /// Axis the dial edits in separate X/Y mode: 0 = X, 1 = Y.
@@ -77,6 +81,14 @@ export component MainWindow inherits Window {
             root.dpi-y = v;
         }
     }
+
+    VerticalLayout {
+        width: root.width;
+        height: root.height;
+
+    // Screen area
+    Rectangle {
+        vertical-stretch: 1;
 
     if root.screen == Screen.searching: Banner {
         icon: @image-url("icons/mouse.svg");
@@ -114,10 +126,11 @@ export component MainWindow inherits Window {
     }
 
     if root.screen == Screen.connected: VerticalLayout {
-        // Pinned to the window: content sizes never resize the layout.
-        width: root.width;
-        height: root.height;
+        // Pinned to the screen area: content sizes never resize the layout.
+        width: parent.width;
+        height: parent.height;
         padding: Theme.page-pad;
+        padding-bottom: 0;
         spacing: Theme.gap;
 
         // Header
@@ -391,36 +404,84 @@ export component MainWindow inherits Window {
                     }
                 }
             }
+    }
+    }
 
-        // Footer bar
-        HorizontalLayout {
-            spacing: 8px;
-            vertical-stretch: 0;
+    // Footer bar, on every screen
+    HorizontalLayout {
+        padding: Theme.page-pad;
+        padding-top: Theme.gap;
+        spacing: 8px;
+
+        if root.screen == Screen.connected: Rectangle {
+            width: 6px;
             Rectangle {
                 width: 6px;
-                Rectangle {
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 1px;
-                    background: Theme.accent;
-                }
+                height: 6px;
+                border-radius: 1px;
+                background: Theme.accent;
             }
-            Text {
-                text: "Changes are written to the mouse as you make them.";
-                color: Theme.text-muted;
-                font-size: Theme.font-small;
-                vertical-alignment: center;
-            }
-            Rectangle { horizontal-stretch: 1; }
-            Text {
-                text: "MOUSETUNE " + root.version;
-                color: Theme.text-muted;
+        }
+        if root.screen == Screen.connected: Text {
+            text: "Changes are written to the mouse as you make them.";
+            color: Theme.text-muted;
+            font-size: Theme.font-small;
+            vertical-alignment: center;
+        }
+        Rectangle { horizontal-stretch: 1; }
+        Text {
+            text: "Not affiliated with Razer Inc.";
+            color: Theme.text-muted;
+            font-size: Theme.font-small;
+            vertical-alignment: center;
+        }
+        Text {
+            text: "·";
+            color: Theme.text-muted;
+            vertical-alignment: center;
+        }
+        about-link := Rectangle {
+            width: about-text.preferred-width;
+            accessible-role: button;
+            accessible-label: "About MouseTune";
+            accessible-action-default => { root.about-open = true; }
+            about-text := Text {
+                text: "ABOUT  " + root.version;
+                color: about-touch.has-hover || about-scope.has-focus ? Theme.accent-hi : Theme.text-muted;
                 font-family: Theme.display;
                 font-size: 11px;
                 font-weight: 600;
                 letter-spacing: Theme.label-tracking;
                 vertical-alignment: center;
             }
+            about-scope := FocusScope {
+                key-pressed(event) => {
+                    if (event.text == " " || event.text == "\n") {
+                        root.about-open = true;
+                        return accept;
+                    }
+                    return reject;
+                }
+            }
+            about-touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    root.about-open = true;
+                }
+            }
+        }
+    }
+    }
+
+    if root.about-open: AboutOverlay {
+        width: root.width;
+        height: root.height;
+        version: root.version;
+        close => {
+            root.about-open = false;
+        }
+        open-project => {
+            root.open-project();
         }
     }
 }

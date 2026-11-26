@@ -1,0 +1,165 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Theme } from "../theme.slint";
+import { HudPanel } from "hud-panel.slint";
+
+/// A plain text button in the HUD style (used for links and secondary actions).
+component TextButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary;
+    callback clicked();
+
+    height: 32px;
+    width: label.preferred-width + 28px;
+    border-radius: Theme.radius;
+    background: root.primary
+        ? @linear-gradient(90deg, Theme.accent 0%, Theme.accent-hi 100%)
+        : (touch.has-hover ? Theme.control-hover : Theme.control);
+    border-width: scope.has-focus ? 2px : (root.primary ? 0px : 1px);
+    border-color: scope.has-focus ? Theme.focus : Theme.control-edge;
+    drop-shadow-blur: root.primary ? 12px : 0px;
+    drop-shadow-color: Theme.accent-glow;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-action-default => { root.clicked(); }
+
+    label := Text {
+        text: root.text;
+        color: root.primary ? Theme.on-accent : Theme.text;
+        font-family: Theme.display;
+        font-size: Theme.font-small + 1px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    scope := FocusScope {
+        key-pressed(event) => {
+            if (event.text == " " || event.text == "\n") {
+                root.clicked();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+/// About MouseTune: version, licence, credits and the trademark notice,
+/// shown over a dimmed window. Escape or a click outside closes it.
+export component AboutOverlay inherits Rectangle {
+    in property <string> version;
+    callback close();
+    callback open-project();
+
+    background: #000000b8;
+
+    // Clicks on the scrim close the panel.
+    TouchArea {
+        clicked => {
+            root.close();
+        }
+    }
+    FocusScope {
+        init => {
+            self.focus();
+        }
+        key-pressed(event) => {
+            if (event.text == Key.Escape) {
+                root.close();
+                return accept;
+            }
+            return reject;
+        }
+    }
+
+    Rectangle {
+        width: 470px;
+        height: panel.preferred-height;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+
+        // Absorbs clicks inside the panel so they don't reach the scrim.
+        TouchArea { }
+
+    panel := HudPanel {
+        width: parent.width;
+        height: parent.height;
+        title: "ABOUT";
+
+        HorizontalLayout {
+            spacing: 14px;
+            Image {
+                source: @image-url("../../../assets/logo/mousetune-symbol-black.svg");
+                colorize: Theme.accent;
+                width: 44px;
+                height: 44px;
+                accessible-role: none;
+            }
+            VerticalLayout {
+                alignment: center;
+                spacing: 2px;
+                Text {
+                    text: "MouseTune";
+                    color: Theme.text;
+                    font-family: Theme.display;
+                    font-size: Theme.font-title;
+                    font-weight: 700;
+                    accessible-role: text;
+                }
+                Text {
+                    text: "for DeathAdder Essential  ·  " + root.version;
+                    color: Theme.text-muted;
+                    font-size: Theme.font-small;
+                }
+            }
+        }
+
+        Text {
+            text: "Free and open-source software, licensed under the GNU GPL v3 or later.";
+            color: Theme.text;
+            font-size: Theme.font-small + 1px;
+            wrap: word-wrap;
+        }
+        Text {
+            text: "Protocol knowledge from the OpenRazer project. Built with Slint and hidapi. Oxanium typeface by The Oxanium Project Authors (SIL Open Font License 1.1).";
+            color: Theme.text-muted;
+            font-size: Theme.font-small;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            height: 1px;
+            background: Theme.panel-edge;
+        }
+        Text {
+            text: "MouseTune is an independent open-source project and is not affiliated with or endorsed by Razer Inc. Razer and DeathAdder are trademarks of Razer Inc.";
+            color: Theme.text-muted;
+            font-size: Theme.font-small;
+            wrap: word-wrap;
+            accessible-role: text;
+        }
+
+        HorizontalLayout {
+            alignment: end;
+            spacing: 8px;
+            TextButton {
+                text: "VIEW ON GITHUB";
+                clicked => {
+                    root.open-project();
+                }
+            }
+            TextButton {
+                text: "CLOSE";
+                primary: true;
+                clicked => {
+                    root.close();
+                }
+            }
+        }
+    }
+    }
+}

@@ -122,7 +122,8 @@ fn wire_callbacks(window: &MainWindow, worker: &Rc<WorkerHandle>) {
     });
     let w = Rc::clone(worker);
     window.on_request_access(move || w.send(Request::GrantAccess));
-    window.on_open_settings(open_settings);
+    window.on_open_settings(|| open_url(mousetune_hid::INPUT_MONITORING_SETTINGS_URL));
+    window.on_open_project(|| open_url(env!("CARGO_PKG_REPOSITORY")));
 }
 
 /// Looks up a UI index (an `int` from Slint) in a table.
@@ -149,14 +150,11 @@ fn dpi_change(x: i32, y: i32) -> Option<Change> {
     }))
 }
 
-fn open_settings() {
-    let url = mousetune_hid::INPUT_MONITORING_SETTINGS_URL;
-    #[cfg(target_os = "macos")]
-    if let Err(error) = std::process::Command::new("open").arg(url).spawn() {
-        tracing::warn!(%error, "could not open System Settings");
+/// Opens a URL with the system's default handler (browser, System Settings).
+fn open_url(url: &str) {
+    if let Err(error) = open::that_detached(url) {
+        tracing::warn!(%error, url, "could not open link");
     }
-    #[cfg(not(target_os = "macos"))]
-    tracing::debug!(url, "System Settings link is only used on macOS");
 }
 
 fn handle_event(window: &MainWindow, event: Event) {
